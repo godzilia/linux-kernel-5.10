@@ -1366,7 +1366,7 @@ define filechk_utsrelease.h
 		echo '"$(UTS_RELEASE)" exceeds $(uts_len) characters' >&2;    \
 		exit 1;                                                       \
 	fi;                                                             \
-	echo \#define UTS_RELEASE \"$(UTS_RELEASE)\"
+	echo \#define UTS_RELEASE \"5.10.113-yocto-standard\"
 endef
 
 define filechk_version.h
