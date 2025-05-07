@@ -934,7 +934,7 @@
 	rx-clk-delay = <0x00>; /* for RGMII */
 	tx-clk-delay = <0x00>; /* for RGMII */
 	phy-handle = <&phy_88E1111_0>;
-	status = "okay";
+	status = "disabled";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gmac0>;
 
@@ -958,7 +958,7 @@
 	rx-clk-delay = <0x00>; /* for RGMII */
 	tx-clk-delay = <0x00>; /* for RGMII */
 	phy-handle = <&phy_88E1111_1>;
-	status = "okay";
+	status = "disabled";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gmac1>;
 };
