@@ -480,6 +480,16 @@ static struct urb *usb_wwan_setup_urb(struct usb_serial_port *port,
 	if (intfdata->use_zlp && dir == USB_DIR_OUT)
 		urb->transfer_flags |= URB_ZERO_PACKET;
 
+	#if 1 //Added for Zero Packet
+	if (dir == USB_DIR_OUT)
+	{
+		struct usb_device_descriptor *desc = &serial->dev->descriptor;
+		if(desc->idVendor==cpu_to_le16(0x12d1) &&
+				desc->idProduct==cpu_to_le16(0x1506))
+			urb->transfer_flags |= URB_ZERO_PACKET;
+	}
+	#endif
+
 	return urb;
 }
 
