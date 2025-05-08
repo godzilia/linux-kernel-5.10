@@ -28,6 +28,6 @@
 
 &dhost_0 {
 	panel0@0 {
-		compatible = "chongzhou,cz101b4001", "jadard,jd9365da-h3";
+		compatible = "lt9711,kd140n26";
 	};
 };

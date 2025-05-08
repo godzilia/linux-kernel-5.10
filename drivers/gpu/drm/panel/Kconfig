@@ -529,6 +529,16 @@ config DRM_PANEL_JADARD_JD9365DA_H3
 	  WXGA MIPI DSI panel. The panel support TFT dot matrix LCD with
 	  800RGBx1280 dots at maximum.
 
+config DRM_PANEL_LT9711
+	tristate "LT9711 KD140N26 DSI panel"
+	depends on OF
+	depends on DRM_MIPI_DSI
+	depends on BACKLIGHT_CLASS_DEVICE
+	help
+	  Say Y here if you want to enable support for LT9711 KD140N26
+	  WXGA MIPI DSI panel. The panel support TFT dot matrix LCD with
+	  1920x1200 dots at maximum.
+
 config DRM_PANEL_HX8279
 	tristate "HX8279-based panels"
 	depends on OF

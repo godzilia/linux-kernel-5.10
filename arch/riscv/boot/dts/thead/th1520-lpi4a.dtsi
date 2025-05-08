@@ -981,7 +981,7 @@
 	bus-width = <4>;
 	pull_up;
 	wprtn_ignore;
-	status = "okay";
+	status = "disabled";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_sdio0>;
 };
@@ -999,7 +999,7 @@
 	cap-sd-highspeed;
 	wakeup-source;
 	keep-power-in-suspend;
-	status = "okay";
+	status = "disabled";
 };
 
 &padctrl0_apsys { /* right-pinctrl */
@@ -1064,18 +1064,35 @@
 
 			pinctrl_gmac1: gmac1grp {
 				thead,pins = <
-					FM_GPIO2_18	0x1	0x20f	/*	GMAC1_TX_CLK  */
-					FM_GPIO2_19	0x1	0x20f	/*	GMAC1_RX_CLK  */
-					FM_GPIO2_20	0x1	0x20f	/*	GMAC1_TXEN  */
-					FM_GPIO2_21	0x1	0x20f	/*	GMAC1_TXD0  */
-					FM_GPIO2_22	0x1	0x20f	/*	GMAC1_TXD1  */
-					FM_GPIO2_23	0x1	0x20f	/*	GMAC1_TXD2  */
-					FM_GPIO2_24	0x1	0x20f	/*	GMAC1_TXD3  */
-					FM_GPIO2_25	0x1	0x20f	/*	GMAC1_RXDV  */
-					FM_GPIO2_30	0x1	0x20f	/*	GMAC1_RXD0  */
-					FM_GPIO2_31	0x1	0x20f	/*	GMAC1_RXD1  */
-					FM_GPIO3_0	0x1	0x20f	/*	GMAC1_RXD2  */
-					FM_GPIO3_1	0x1	0x20f	/*	GMAC1_RXD3  */
+					FM_GPIO2_18	0x0	0x20f	/*	GMAC1_TX_CLK  */
+					FM_GPIO2_19	0x0	0x20f	/*	GMAC1_RX_CLK  */
+					FM_GPIO2_20	0x0	0x20f	/*	GMAC1_TXEN  */
+					FM_GPIO2_21	0x0	0x20f	/*	GMAC1_TXD0  */
+					FM_GPIO2_22	0x0	0x20f	/*	GMAC1_TXD1  */
+					FM_GPIO2_23	0x0	0x20f	/*	GMAC1_TXD2  */
+					FM_GPIO2_24	0x0	0x20f	/*	GMAC1_TXD3  */
+					FM_GPIO2_25	0x0	0x20f	/*	GMAC1_RXDV  */
+					FM_GPIO2_30	0x0	0x20f	/*	GMAC1_RXD0  */
+					FM_GPIO2_31	0x0	0x20f	/*	GMAC1_RXD1  */
+					FM_GPIO3_0	0x0	0x20f	/*	GMAC1_RXD2  */
+					FM_GPIO3_1	0x0	0x20f	/*	GMAC1_RXD3  */
+				>;
+			};
+
+			pinctrl_lt9711: lt9711grp {
+				thead,pins = <
+					FM_GPIO2_18	0x0	0x20f	
+					FM_GPIO2_19	0x0	0x20f	
+					FM_GPIO2_20	0x0	0x20f	
+					FM_GPIO2_21	0x0	0x20f	
+					FM_GPIO2_22	0x0	0x20f	
+					FM_GPIO2_23	0x0	0x20f	
+					FM_GPIO2_24	0x0	0x20f	
+					FM_GPIO2_25	0x0	0x20f	
+					FM_GPIO2_30	0x0	0x20f	
+					FM_GPIO2_31	0x0	0x20f	
+					FM_GPIO3_0	0x0	0x20f	
+					FM_GPIO3_1	0x0	0x20f	
 				>;
 			};
 
@@ -1778,9 +1795,12 @@
 	panel0@0 {
 		reg = <0>;
 		backlight = <&lcd0_backlight>;
-		reset-gpio = <&pcal6408ahk_d 7 0>; /* active low */
-		hsvcc-supply = <&soc_vdd18_lcd0_en_reg>;
-		vspn3v3-supply = <&soc_vdd33_lcd0_en_reg>;
+		enable-gpio = <&gpio2_porta 21 0>; /* active high */
+		//hsvcc-supply = <&soc_vdd18_lcd0_en_reg>;
+		//vspn3v3-supply = <&soc_vdd33_lcd0_en_reg>;
+		
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_lt9711>;
 
 		port {
 				panel0_in: endpoint {
@@ -1873,8 +1893,8 @@
 &usb_1 {
 	hubswitch-gpio = <&ao_gpio_porta 4 0>;
 	vbus-supply = <&soc_vbus_en_reg>;
-	hub1v2-supply = <&reg_usb_hub_vdd1v2>;
-	hub5v-supply = <&reg_usb_hub_vcc5v>;
+	//hub1v2-supply = <&reg_usb_hub_vdd1v2>;
+	//hub5v-supply = <&reg_usb_hub_vcc5v>;
 };
 
 &light_regdump {
