@@ -26,8 +26,6 @@
 	#size-cells = <2>;
 
 	aliases {
-		ethernet0 = &gmac0;
-		ethernet1 = &gmac1;
 		gpio0 = &gpio0;
 		gpio1 = &gpio1;
 		gpio2 = &gpio2;
@@ -1487,49 +1485,7 @@
 			snps,blen = <16 8 4 0 0 0 0>;
 		};
 
-		gmac0: ethernet@ffe7070000 {
-			compatible = "thead,light-dwmac";
-			reg = <0xff 0xe7070000 0x0 0x2000
-			       0xff 0xec00301c 0x0 0x4
-			       0xff 0xec003020 0x0 0x4
-			       0xff 0xec003000 0x0 0x1c>;
-			reg-names = "gmac", "phy_if_reg", "txclk_dir_reg", "clk_mgr_reg";
-			interrupt-parent = <&intc>;
-			interrupts = <66>;
-			interrupt-names = "macirq";
-			clocks = <&clk CLKGEN_GMAC0_CCLK>,
-					 <&clk CLKGEN_GMAC0_PCLK>,
-					 <&clk CLKGEN_GMAC_AXI_ACLK>,
-					 <&clk CLKGEN_GMAC_AXI_PCLK>;
-			clock-names = "gmac_pll_clk","pclk","axi_aclk","axi_pclk";
-			snps,pbl = <32>;
-			snps,fixed-burst;
-			snps,axi-config = <&stmmac_axi_setup>;
-			nvmem-cells = <&gmac0_mac_address>;
-			nvmem-cell-names = "mac-address";
-		};
 
-		gmac1: ethernet@ffe7060000 {
-			compatible = "thead,light-dwmac";
-			reg = <0xff 0xe7060000 0x0 0x2000
-			       0xff 0xec00401c 0x0 0x4
-			       0xff 0xec004020 0x0 0x4
-			       0xff 0xec004000 0x0 0x1c>;
-			reg-names = "gmac", "phy_if_reg", "txclk_dir_reg", "clk_mgr_reg";
-			interrupt-parent = <&intc>;
-			interrupts = <67>;
-			interrupt-names = "macirq";
-			clocks = <&clk CLKGEN_GMAC1_CCLK>,
-					 <&clk CLKGEN_GMAC1_PCLK>,
-					 <&clk CLKGEN_GMAC_AXI_ACLK>,
-					 <&clk CLKGEN_GMAC_AXI_PCLK>;
-			clock-names = "gmac_pll_clk","pclk","axi_aclk","axi_pclk";
-			snps,pbl = <32>;
-			snps,fixed-burst;
-			snps,axi-config = <&stmmac_axi_setup>;
-			nvmem-cells = <&gmac1_mac_address>;
-			nvmem-cell-names = "mac-address";
-		};
 
 		emmc: sdhci@ffe7080000 {
 			compatible = "snps,dwcmshc-sdhci";

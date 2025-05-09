@@ -242,7 +242,6 @@
 		regulator-name = "regulator-pwr-en";
 		regulator-min-microvolt = <2800000>;
 		regulator-max-microvolt = <2800000>;
-		gpio = <&pcal6408ahk_d 4 1>;
 		enable-active-high;
 		regulator-always-on;
 	};
@@ -252,7 +251,6 @@
 		regulator-name = "regulator-hub-vdd12-en";
 		regulator-min-microvolt = <1200000>;
 		regulator-max-microvolt = <1200000>;
-		gpio = <&pcal6408ahk_d 2 1>;
 		enable-active-high;
 	};
 
@@ -261,30 +259,10 @@
 		regulator-name = "regulator-hub-vcc5v-en";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		gpio = <&pcal6408ahk_d 3 1>;
 		enable-active-high;
 	};
 
-	wcn_wifi: wireless-wlan {
-		compatible = "wlan-platdata";
-		clock-names = "clk_wifi";
-		ref-clock-frequency = <24000000>;
-		keep_wifi_power_on;
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_wifi_wake>;
-		wifi_chip_type = "rtl8723ds";
-		WIFI,poweren_gpio = <&pcal6408ahk_c 4 0>;
-		support_power_ctrl;
-		status = "okay";
-	};
 
-	wcn_bt: wireless-bluetooth {
-		compatible = "bluetooth-platdata";
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_bt_wake>;
-		BT,power_gpio    = <&pcal6408ahk_c 5 0>;
-		status = "okay";
-	};
 
 	gpio-keys {
 		compatible = "gpio-keys";
@@ -356,7 +334,6 @@
 			regulator-name = "soc_lcd0_vdd33_en";
 			regulator-min-microvolt = <3300000>;
 			regulator-max-microvolt = <3300000>;
-			gpio = <&pcal6408ahk_d 5 1>;
 			enable-active-high;
 		};
 
@@ -365,7 +342,6 @@
 			regulator-name = "soc_lcd0_vdd18_en";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
-			gpio = <&pcal6408ahk_d 6 1>;
 			enable-active-high;
 		};
 
@@ -405,7 +381,6 @@
 			regulator-name = "soc_avdd28_rgb";
 			regulator-min-microvolt = <2800000>;
 			regulator-max-microvolt = <2800000>;
-			gpio = <&pcal6408ahk_b 1 1>;
 			enable-active-high;
 		};
 
@@ -414,7 +389,6 @@
 			regulator-name = "soc_dovdd18_rgb";
 			regulator-min-microvolt = <2800000>;
 			regulator-max-microvolt = <2800000>;
-			gpio = <&pcal6408ahk_b 2 1>;
 			enable-active-high;
 		};
 
@@ -423,7 +397,6 @@
 			regulator-name = "soc_dvdd12_rgb";
 			regulator-min-microvolt = <2800000>;
 			regulator-max-microvolt = <2800000>;
-			gpio = <&pcal6408ahk_b 0 1>;
 			enable-active-high;
 		};
 
@@ -432,7 +405,6 @@
 			regulator-name = "soc_avdd25_ir";
 			regulator-min-microvolt = <2500000>;
 			regulator-max-microvolt = <2500000>;
-			gpio = <&pcal6408ahk_b 5 1>;
 			enable-active-high;
 		};
 
@@ -441,7 +413,6 @@
 			regulator-name = "soc_dovdd18_ir";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
-			gpio = <&pcal6408ahk_b 3 1>;
 			enable-active-high;
 		};
 
@@ -450,7 +421,6 @@
 			regulator-name = "soc_dvdd12_ir";
 			regulator-min-microvolt = <1200000>;
 			regulator-max-microvolt = <1200000>;
-			gpio = <&pcal6408ahk_b 4 1>;
 			enable-active-high;
 		};
 
@@ -459,7 +429,6 @@
 			regulator-name = "soc_cam2_avdd25_ir";
 			regulator-min-microvolt = <2500000>;
 			regulator-max-microvolt = <2500000>;
-			gpio = <&pcal6408ahk_b 7 1>;
 			enable-active-high;
 		};
 
@@ -468,7 +437,6 @@
 			regulator-name = "soc_cam2_dovdd18_ir";
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
-			gpio = <&pcal6408ahk_b 6 1>;
 			enable-active-high;
 		};
 
@@ -477,7 +445,6 @@
 			regulator-name = "soc_cam2_dvdd12_ir";
 			regulator-min-microvolt = <1200000>;
 			regulator-max-microvolt = <1200000>;
-			gpio = <&pcal6408ahk_c 0 1>;
 			enable-active-high;
 		};
 
@@ -929,39 +896,6 @@
 
 };
 
-&gmac0 {
-	phy-mode = "rgmii-id";
-	rx-clk-delay = <0x00>; /* for RGMII */
-	tx-clk-delay = <0x00>; /* for RGMII */
-	phy-handle = <&phy_88E1111_0>;
-	status = "disabled";
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_gmac0>;
-
-	mdio0 {
-		#address-cells = <1>;
-		#size-cells = <0>;
-		compatible = "snps,dwmac-mdio";
-
-		phy_88E1111_0: ethernet-phy@0 {
-			reg = <0x1>;
-		};
-
-		phy_88E1111_1: ethernet-phy@1 {
-			reg = <0x2>;
-		};
-	};
-};
-
-&gmac1 {
-	phy-mode = "rgmii-id";
-	rx-clk-delay = <0x00>; /* for RGMII */
-	tx-clk-delay = <0x00>; /* for RGMII */
-	phy-handle = <&phy_88E1111_1>;
-	status = "disabled";
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_gmac1>;
-};
 
 &emmc {
 	max-frequency = <198000000>;
@@ -981,7 +915,7 @@
 	bus-width = <4>;
 	pull_up;
 	wprtn_ignore;
-	status = "disabled";
+	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_sdio0>;
 };
@@ -999,7 +933,7 @@
 	cap-sd-highspeed;
 	wakeup-source;
 	keep-power-in-suspend;
-	status = "disabled";
+	status = "okay";
 };
 
 &padctrl0_apsys { /* right-pinctrl */
@@ -1064,18 +998,18 @@
 
 			pinctrl_gmac1: gmac1grp {
 				thead,pins = <
-					FM_GPIO2_18	0x0	0x20f	/*	GMAC1_TX_CLK  */
-					FM_GPIO2_19	0x0	0x20f	/*	GMAC1_RX_CLK  */
-					FM_GPIO2_20	0x0	0x20f	/*	GMAC1_TXEN  */
-					FM_GPIO2_21	0x0	0x20f	/*	GMAC1_TXD0  */
-					FM_GPIO2_22	0x0	0x20f	/*	GMAC1_TXD1  */
-					FM_GPIO2_23	0x0	0x20f	/*	GMAC1_TXD2  */
-					FM_GPIO2_24	0x0	0x20f	/*	GMAC1_TXD3  */
-					FM_GPIO2_25	0x0	0x20f	/*	GMAC1_RXDV  */
-					FM_GPIO2_30	0x0	0x20f	/*	GMAC1_RXD0  */
-					FM_GPIO2_31	0x0	0x20f	/*	GMAC1_RXD1  */
-					FM_GPIO3_0	0x0	0x20f	/*	GMAC1_RXD2  */
-					FM_GPIO3_1	0x0	0x20f	/*	GMAC1_RXD3  */
+					FM_GPIO2_18	0x0	0x208	/*	GMAC1_TX_CLK  */
+					FM_GPIO2_19	0x0	0x208	/*	GMAC1_RX_CLK  */
+					FM_GPIO2_20	0x0	0x208	/*	GMAC1_TXEN  */
+					FM_GPIO2_21	0x0	0x208	/*	GMAC1_TXD0  */
+					FM_GPIO2_22	0x0	0x208	/*	GMAC1_TXD1  */
+					FM_GPIO2_23	0x0	0x208	/*	GMAC1_TXD2  */
+					FM_GPIO2_24	0x0	0x208	/*	GMAC1_TXD3  */
+					FM_GPIO2_25	0x0	0x208	/*	GMAC1_RXDV  */
+					FM_GPIO2_30	0x0	0x208	/*	GMAC1_RXD0  */
+					FM_GPIO2_31	0x0	0x208	/*	GMAC1_RXD1  */
+					FM_GPIO3_0	0x0	0x208	/*	GMAC1_RXD2  */
+					FM_GPIO3_1	0x0	0x208	/*	GMAC1_RXD3  */
 				>;
 			};
 
@@ -1099,6 +1033,8 @@
 			pinctrl_sdio0: sdio0grp {
 				thead,pins = <
 					FM_SDIO0_DETN	0x0	0x202
+					FM_GPIO2_21	 0x0	0x23f	/*	GMAC1_TXD0  */
+					FM_GPIO2_22	 0x0	0x23f	/*	GMAC1_TXD1  */
 				>;
 			};
 
@@ -1334,13 +1270,6 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c0>;
-
-	pcal6408ahk_b: gpio@20 {
-		compatible = "nxp,pca9557";
-		reg = <0x18>;
-		gpio-controller;
-		#gpio-cells = <2>;
-	};
 };
 
 &i2c1 {
@@ -1349,12 +1278,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c1>;
 
-	pcal6408ahk_c: gpio@20 {
-		compatible = "nxp,pca9557";
-		reg = <0x18>;
-		gpio-controller;
-		#gpio-cells = <2>;
-	};
 };
 
 &i2c2 {
@@ -1370,12 +1293,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c3>;
 
-	pcal6408ahk_d: gpio@20 {
-		compatible = "nxp,pca9557";
-		reg = <0x18>;
-		gpio-controller;
-		#gpio-cells = <2>;
-	};
 
 	touch@14 {
 		#gpio-cells = <2>;
@@ -1384,7 +1301,6 @@
 		interrupt-parent = <&ao_gpio_porta>;
 		interrupts = <3 0>;
 		irq-gpios = <&ao_gpio_porta 3 0>;
-		reset-gpios = <&pcal6408ahk_d 0 0>;
 		AVDD28-supply = <&reg_tp_pwr_en>;
 		tp-size = <9271>;
 		status = "disable";
@@ -1464,7 +1380,6 @@
 	sensor_regulators = "soc_dovdd18_rgb", "soc_dvdd12_rgb", "soc_avdd28_rgb";
 	sensor_regulator_timing_us = <70 50 20>;
 	sensor_pdn = <&gpio1_porta 28 0>; //powerdown pin / shutdown pin 
-    sensor_rst 	= <&pcal6408ahk_c 1 0>;
 	sensor_pdn_delay_us = <4000>; //powerdown pin / shutdown pin actived till I2C ready
 	DOVDD18_RGB-supply = <&soc_dovdd18_rgb_reg>;
 	DVDD12_RGB-supply = <&soc_dvdd12_rgb_reg>;
@@ -1482,7 +1397,6 @@
     sensor_regulator_timing_us = <70 1000 2000>;
     i2c_addr = /bits/ 8 <0x30>;
     sensor_pdn = <&gpio1_porta 30 0>; //powerdown pin / shutdown pin 
-    sensor_rst 	= <&pcal6408ahk_c 2 0>;
 	sensor_pdn_delay_us = <2000>; //powerdown pin / shutdown pin actived till I2C ready
     DOVDD18_IR-supply = <&soc_dovdd18_ir_reg>;
     DVDD12_IR-supply = <&soc_dvdd12_ir_reg>;
@@ -1499,7 +1413,6 @@
     sensor_regulator_timing_us = <70 1000 2000>;
     i2c_addr = /bits/ 8 <0x30>;
     sensor_pdn = <&gpio2_porta 13 0>; //powerdown pin / shutdown pin 
-    sensor_rst 	= <&pcal6408ahk_c 3 0>;
 	sensor_pdn_delay_us = <2000>; //powerdown pin / shutdown pin actived till I2C ready
     DOVDD18_IR-supply = <&soc_cam2_dovdd18_ir_reg>;
     DVDD12_IR-supply = <&soc_cam2_dvdd12_ir_reg>;
@@ -1515,7 +1428,6 @@
 	sensor_regulators = "soc_dovdd18_rgb", "soc_dvdd12_rgb", "soc_avdd28_rgb";
 	sensor_regulator_timing_us = <70 50 20>;
 	sensor_pdn = <&gpio1_porta 28 0>; //powerdown pin / shutdown pin 
-	sensor_rst 	= <&pcal6408ahk_c 1 0>;
 	sensor_pdn_delay_us = <4000>; //powerdown pin / shutdown pin actived till I2C ready
 	DOVDD18_RGB-supply = <&soc_dovdd18_rgb_reg>;
 	DVDD12_RGB-supply = <&soc_dvdd12_rgb_reg>;
