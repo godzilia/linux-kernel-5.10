@@ -1155,6 +1155,17 @@
 					FM_CLK_OUT_2  0x3     0x208
 				>;
 			};
+			hidkey_irq_pins: hidkey-irq-0 {
+				gpio-pins {
+					pins = "GPIO0_25";
+					function = "gpio";
+					bias-pull-up;
+					drive-strength = <13>;
+					input-enable;
+					input-schmitt-disable;
+					slew-rate= <0>;
+				};
+			};
 		};
 };
 
@@ -1266,10 +1277,23 @@
 };
 
 &i2c0 {
-    clock-frequency = <400000>;
+	clock-frequency = <400000>;
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c0>;
+	hidkey: hidkey@3a{
+		status = "okay";
+		clock-frequency = <400000>;
+		compatible = "hid-over-i2c";
+		interrupt-parent = <&gpio0_porta>;
+		interrupts = <25 2>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&hidkey_irq_pins>;
+		reg = <0x3a>;
+		hid-descr-addr = <0x01>;
+		hid-support-wakeup;
+		wakeup-source;
+	};
 };
 
 &i2c1 {
