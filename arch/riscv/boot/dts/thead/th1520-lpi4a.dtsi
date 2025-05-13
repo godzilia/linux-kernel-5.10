@@ -289,6 +289,25 @@
 		};
 	};
 
+	codec_en1: codec-en1 {
+		compatible = "regulator-fixed";
+		regulator-name = "codec_en1";
+		gpios = <&gpio1_porta 0 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+	codec_en2: codec-en2 {
+		compatible = "regulator-fixed";
+		regulator-name = "codec_en2";
+		gpios = <&gpio1_porta 29 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
+
 	aon: aon {
 		compatible = "thead,light-aon";
 		mbox-names = "aon";
@@ -733,78 +752,26 @@
 	clock-frequency = <100000>;
 	status = "okay";
 	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_audiopa29>,
-				<&pinctrl_audiopa30>,
+	pinctrl-0 = <&pinctrl_audiopa6>,
+				<&pinctrl_audiopa7>,
 				<&pinctrl_audio_i2c0>;
 
-	es8156_audio_codec: es8156@8 {
+	es8326: es8326@19 {
+		status = "okay";
 		#sound-dai-cells = <0>;
-		compatible = "everest,es8156";
-		reg = <0x08>;
-		sound-name-prefix = "ES8156";
-		AVDD-supply = <&soc_aud_3v3_en_reg>;
-		DVDD-supply = <&soc_aud_1v8_en_reg>;
-		PVDD-supply = <&soc_aud_1v8_en_reg>;
+		compatible = "everest,es8326";
+		reg = <0x19>;
+		interrupt-parent = <&gpio1_porta>;
+		interrupts = <10 0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&es8326_irq>;
+		everest,jack-detect-inverted;
 	};
-
-	es7210_audio_codec: es7210@40 {
-		#sound-dai-cells = <0>;
-		compatible = "MicArray_0";
-		reg = <0x40>;
-		sound-name-prefix = "ES7210";
-		MVDD-supply = <&soc_aud_3v3_en_reg>;
-		AVDD-supply = <&soc_aud_3v3_en_reg>;
-		DVDD-supply = <&soc_aud_1v8_en_reg>;
-		PVDD-supply = <&soc_aud_1v8_en_reg>;
-	};
-
-	audio_aw87519_pa: amp@58 {
-		compatible = "awinic,aw87519_pa";
-		reg = <0x58>;
-		sound-name-prefix = "AW87519";
-		status = "disabled";
-	};
-
-	audio_aw87519_pa1@5b {
-		compatible = "awinic,aw87519_pa";
-		reg = <0x5b>;
-		status = "disabled";
-	};
-
 };
 
 &audio_i2c1 {
 	clock-frequency = <100000>;
-	status = "okay";
-	pinctrl-0 = <&pinctrl_audiopa6>,
-				<&pinctrl_audiopa7>,
-				<&pinctrl_audio_i2c1>;
-
-	es8156_audio_codec_1: es8156@8 {
-		#sound-dai-cells = <0>;
-		compatible = "everest,es8156";
-		reg = <0x08>;
-		status = "disabled";
-	};
-
-	es7210_audio_codec_1: es7210@40 {
-		#sound-dai-cells = <0>;
-		compatible = "MicArray_0";
-		reg = <0x40>;
-		status = "disabled";
-	};
-
-	audio_aw87519_pa2@58 {
-		compatible = "awinic,aw87519_pa";
-		reg = <0x58>;
-		status = "disabled";
-	};
-
-	audio_aw87519_pa3@5b {
-		compatible = "awinic,aw87519_pa";
-		reg = <0x5b>;
-		status = "disabled";
-	};
+	status = "disabled";
 };
 
 &spi0 {
@@ -1155,6 +1122,7 @@
 					FM_CLK_OUT_2  0x3     0x208
 				>;
 			};
+
 			hidkey_irq_pins: hidkey-irq-0 {
 				gpio-pins {
 					pins = "GPIO0_25";
@@ -1165,6 +1133,10 @@
 					input-schmitt-disable;
 					slew-rate= <0>;
 				};
+			};
+
+			es8326_irq: es8326-irq {
+				thead,pins = < FM_GPIO1_10 0x0 0x202 >;
 			};
 		};
 };
@@ -1242,8 +1214,8 @@
 
 		pinctrl_audio_i2c0: audio_i2c0_grp {
 			thead,pins = <
-				FM_AUDIO_IO_PA29     LIGHT_PIN_FUNC_2 0x004
-				FM_AUDIO_IO_PA30     LIGHT_PIN_FUNC_2 0x004
+				FM_AUDIO_IO_PA6     LIGHT_PIN_FUNC_0 0x004
+				FM_AUDIO_IO_PA7     LIGHT_PIN_FUNC_0 0x004
 			>;
 		};
 		pinctrl_audio_i2c1: audio_i2c1_grp {
@@ -1765,36 +1737,28 @@
 
 &lightsound {
         status = "okay";
-        simple-audio-card,dai-link@0 {          /* I2S - AUDIO SYS CODEC 8156*/
-                reg = <0>;
-                format = "i2s";
-                cpu {
-                        sound-dai = <&i2s1 0>;
-                };
-                codec {
-                        sound-dai = <&es8156_audio_codec>;
-                };
-        };
-        simple-audio-card,dai-link@1 {          /* I2S - AUDIO SYS CODEC 7210*/
-                reg = <1>;
-                format = "i2s";
-                cpu {
-                        sound-dai = <&i2s1 0>;
-                };
-                codec {
-                        sound-dai = <&es7210_audio_codec>;
-                };
-        };
-        simple-audio-card,dai-link@2 {          /* I2S - HDMI*/
-                reg = <2>;
-                format = "i2s";
-                cpu {
-                        sound-dai = <&light_i2s 1>;
-                };
-                codec {
-                        sound-dai = <&dummy_codec>;
-                };
-        };
+
+        simple-audio-card,dai-link@0 {
+			reg = <0>;
+			format = "i2s";
+			cpu {
+				sound-dai = <&i2s1 0>;
+			};
+			codec {
+				sound-dai = <&es8326>;
+			};
+		};
+
+		simple-audio-card,dai-link@1 {
+			reg = <1>;
+			format = "i2s";
+			cpu {
+				sound-dai = <&light_i2s 1>;
+			};
+			codec {
+				sound-dai = <&dummy_codec>;
+			};
+		};
 };
 
 &light_i2s {
@@ -1802,7 +1766,7 @@
 };
 
 &i2s0 {
-        status = "okay";
+        status = "disabled";
 };
 
 &i2s1 {
@@ -1817,7 +1781,7 @@
 };
 
 &i2s2 {
-        status = "okay";
+        status = "disabled'";
         pinctrl-names = "default";
         pinctrl-0 = <&pinctrl_audiopa18>,
                     <&pinctrl_audiopa19>,

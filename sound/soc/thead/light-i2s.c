@@ -285,6 +285,15 @@ static int light_i2s_set_fmt_dai(struct snd_soc_dai *cpu_dai, unsigned int fmt)
 
 	pm_runtime_put_sync(i2s_private->dev);
 
+	writel(0, i2s_private->regs + I2S_IISEN);
+	regmap_update_bits(i2s_private->regmap, I2S_FSSTA,
+				FSSTA_DATAWTH_Msk | FSSTA_SCLK_SEL_Msk,
+				2000);
+	writel(0x103, i2s_private->regs + I2S_FUNCMODE);
+	writel(0x0, i2s_private->regs + I2S_IISCNF_OUT);
+	light_i2s_set_div_sclk(i2s_private, 48000, DIV_DEFAULT);
+	writel(0x1, i2s_private->regs + I2S_IISEN);
+	
 	return 0;
 }
 
