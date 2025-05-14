@@ -246,65 +246,20 @@
 		regulator-always-on;
 	};
 
-	reg_usb_hub_vdd1v2: regulator-hub-vdd12-en {
+
+	vi_camera_en: vi_camera_en {
 		compatible = "regulator-fixed";
-		regulator-name = "regulator-hub-vdd12-en";
-		regulator-min-microvolt = <1200000>;
-		regulator-max-microvolt = <1200000>;
-		enable-active-high;
-	};
-
-	reg_usb_hub_vcc5v: regulator-hub-vcc5v-en {
-		compatible = "regulator-fixed";
-		regulator-name = "regulator-hub-vcc5v-en";
-		regulator-min-microvolt = <5000000>;
-		regulator-max-microvolt = <5000000>;
-		enable-active-high;
-	};
-
-
-
-	gpio-keys {
-		compatible = "gpio-keys";
-		pinctrl-0 = <&pinctrl_volume &pinctrl_sleep>;
+		regulator-name = "vi_camera_en1";
 		pinctrl-names = "default";
-		key-volumedown {
-			label = "Volume Down Key";
-			linux,code = <KEY_VOLUMEDOWN>;
-			debounce-interval = <1>;
-			gpios = <&gpio1_porta 19 0x1>;
-		};
-		key-volumeup {
-			label = "Volume Up Key";
-			linux,code = <KEY_VOLUMEUP>;
-			debounce-interval = <1>;
-			gpios = <&gpio2_porta 25 0x1>;
-		};
-		key-sleep {
-			label = "Sleep Wake Key";
-			wakeup-source;
-			linux,code = <KEY_SLEEP>;
-			debounce-interval = <1>;
-			gpios = <&ao_gpio_porta 2 0x1>;
-		};
-	};
-
-	codec_en1: codec-en1 {
-		compatible = "regulator-fixed";
-		regulator-name = "codec_en1";
-		gpios = <&gpio1_porta 0 GPIO_ACTIVE_HIGH>;
+		pinctrl-0 = <&pinctrl_cam_en>;
+		gpios = <&gpio2_porta 18 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
 		regulator-always-on;
 		regulator-boot-on;
 	};
-
-	codec_en2: codec-en2 {
-		compatible = "regulator-fixed";
-		regulator-name = "codec_en2";
-		gpios = <&gpio1_porta 29 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		regulator-always-on;
-		regulator-boot-on;
+	vi_camera: vi_camera{
+		status = "okay";
+		camera_en = <&vi_camera_en>;
 	};
 
 
@@ -962,27 +917,15 @@
 					FM_QSPI0_D3_HOLD 0x2    0x238
 				>;
 			};
-
-			pinctrl_gmac1: gmac1grp {
+			
+			pinctrl_cam_en: cam_en{
 				thead,pins = <
-					FM_GPIO2_18	0x0	0x208	/*	GMAC1_TX_CLK  */
-					FM_GPIO2_19	0x0	0x208	/*	GMAC1_RX_CLK  */
-					FM_GPIO2_20	0x0	0x208	/*	GMAC1_TXEN  */
-					FM_GPIO2_21	0x0	0x208	/*	GMAC1_TXD0  */
-					FM_GPIO2_22	0x0	0x208	/*	GMAC1_TXD1  */
-					FM_GPIO2_23	0x0	0x208	/*	GMAC1_TXD2  */
-					FM_GPIO2_24	0x0	0x208	/*	GMAC1_TXD3  */
-					FM_GPIO2_25	0x0	0x208	/*	GMAC1_RXDV  */
-					FM_GPIO2_30	0x0	0x208	/*	GMAC1_RXD0  */
-					FM_GPIO2_31	0x0	0x208	/*	GMAC1_RXD1  */
-					FM_GPIO3_0	0x0	0x208	/*	GMAC1_RXD2  */
-					FM_GPIO3_1	0x0	0x208	/*	GMAC1_RXD3  */
+					FM_GPIO2_18	0x0	0x208
 				>;
 			};
 
 			pinctrl_lt9711: lt9711grp {
 				thead,pins = <
-					FM_GPIO2_18	0x0	0x20f	
 					FM_GPIO2_19	0x0	0x20f	
 					FM_GPIO2_20	0x0	0x20f	
 					FM_GPIO2_21	0x0	0x20f	
@@ -1019,28 +962,7 @@
 					FM_HDMI_CEC	0x0	0x202
 				>;
 			};
-
-			pinctrl_gmac0: gmac0grp {
-				thead,pins = <
-					FM_GMAC0_TX_CLK	0x0	0x20f	/*	GMAC0_TX_CLK  */
-					FM_GMAC0_RX_CLK	0x0	0x20f	/*	GMAC0_RX_CLK  */
-					FM_GMAC0_TXEN	0x0	0x20f	/*	GMAC0_TXEN  */
-					FM_GMAC0_TXD0	0x0	0x20f	/*	GMAC0_TXD0  */
-					FM_GMAC0_TXD1	0x0	0x20f	/*	GMAC0_TXD1  */
-					FM_GMAC0_TXD2	0x0	0x20f	/*	GMAC0_TXD2  */
-					FM_GMAC0_TXD3	0x0	0x20f	/*	GMAC0_TXD3  */
-					FM_GMAC0_RXDV	0x0	0x20f	/*	GMAC0_RXDV  */
-					FM_GMAC0_RXD0	0x0	0x20f	/*	GMAC0_RXD0  */
-					FM_GMAC0_RXD1	0x0	0x20f	/*	GMAC0_RXD1  */
-					FM_GMAC0_RXD2	0x0	0x20f	/*	GMAC0_RXD2  */
-					FM_GMAC0_RXD3	0x0	0x20f	/*	GMAC0_RXD3  */
-					FM_GMAC0_MDC	0x0 0x208	/*	GMAC0_MDC  */
-					FM_GMAC0_MDIO	0x0 0x208	/*	GMAC0_MDIO  */
-					FM_GMAC0_COL	0x3	0x232	/*	PHY0_nRST  */
-					FM_GMAC0_CRS	0x3	0x232	/*	PHY0_nINT  */
-				>;
-			};
-		};
+	};
 };
 
 &padctrl1_apsys { /* left-pinctrl */
@@ -1117,11 +1039,7 @@
 				>;
 			};
 
-			pinctrl_volume: volume_grp {
-				thead,pins = <
-					FM_CLK_OUT_2  0x3     0x208
-				>;
-			};
+			
 			es8326_irq: es8326-irq {
 				thead,pins = <FM_GPIO1_10 0x0 0x202>;
 			};
@@ -1129,7 +1047,7 @@
 				thead,pins = <FM_GPIO0_25 0x0 0x208>;
 			};
 			hidtp_irq_pins: hidtp-irq-0 {
-				thead,pins = <FM_GPIO1_8 0x0  0x208>;
+				thead,pins = <FM_CLK_OUT_1 0x3 0x208>;					    
 			};
 		};
 };
@@ -1187,9 +1105,6 @@
 			};
 			pinctrl_audiopa30: audiopa30 {
 				thead,pins = < FM_AUDIO_PA30 LIGHT_PIN_FUNC_0 0x000 >;
-			};
-			pinctrl_sleep: sleep_grp {
-				thead,pins = <FM_CPU_JTG_TCLK 0x3   0x238 >;
 			};
 
 	};
@@ -1300,19 +1215,6 @@
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c3>;
-
-
-	touch@14 {
-		#gpio-cells = <2>;
-		compatible = "goodix,gt9271";
-		reg = <0x14>;
-		interrupt-parent = <&ao_gpio_porta>;
-		interrupts = <3 0>;
-		irq-gpios = <&ao_gpio_porta 3 0>;
-		AVDD28-supply = <&reg_tp_pwr_en>;
-		tp-size = <9271>;
-		status = "disable";
-	};
 };
 
 &i2c4 {
@@ -1383,242 +1285,6 @@
     memory-region = <&dsp1_mem>;
 };
 
-&vvcam_sensor0 {
-	sensor_name = "OV12870";
-	sensor_regulators = "soc_dovdd18_rgb", "soc_dvdd12_rgb", "soc_avdd28_rgb";
-	sensor_regulator_timing_us = <70 50 20>;
-	sensor_pdn = <&gpio1_porta 28 0>; //powerdown pin / shutdown pin 
-	sensor_pdn_delay_us = <4000>; //powerdown pin / shutdown pin actived till I2C ready
-	DOVDD18_RGB-supply = <&soc_dovdd18_rgb_reg>;
-	DVDD12_RGB-supply = <&soc_dvdd12_rgb_reg>;
-	AVDD28_RGB-supply = <&soc_avdd28_rgb_reg>;
-    i2c_reg_width = /bits/ 8 <2>;
-    i2c_data_width = /bits/ 8 <1>;
-    i2c_addr = /bits/ 8 <0x10>;
-	i2c_bus = /bits/ 8 <0>;
-	status = "okay";
-};
-
-&vvcam_sensor1 {//cam1 csia
-    sensor_name = "SC132GS";
-    sensor_regulators = "soc_dovdd18_ir", "soc_dvdd12_ir", "soc_avdd25_ir";
-    sensor_regulator_timing_us = <70 1000 2000>;
-    i2c_addr = /bits/ 8 <0x30>;
-    sensor_pdn = <&gpio1_porta 30 0>; //powerdown pin / shutdown pin 
-	sensor_pdn_delay_us = <2000>; //powerdown pin / shutdown pin actived till I2C ready
-    DOVDD18_IR-supply = <&soc_dovdd18_ir_reg>;
-    DVDD12_IR-supply = <&soc_dvdd12_ir_reg>;
-    AVDD25_IR-supply = <&soc_avdd25_ir_reg>;
-    i2c_reg_width = /bits/ 8 <2>;
-    i2c_data_width = /bits/ 8 <1>;
-    i2c_bus = /bits/ 8 <1>;
-    status = "okay";
-};
-
-&vvcam_sensor2 {//cam2 csib
-    sensor_name = "SC132GS";
-    sensor_regulators = "soc_cam2_dovdd18_ir", "soc_cam2_dvdd12_ir", "soc_cam2_avdd25_ir";
-    sensor_regulator_timing_us = <70 1000 2000>;
-    i2c_addr = /bits/ 8 <0x30>;
-    sensor_pdn = <&gpio2_porta 13 0>; //powerdown pin / shutdown pin 
-	sensor_pdn_delay_us = <2000>; //powerdown pin / shutdown pin actived till I2C ready
-    DOVDD18_IR-supply = <&soc_cam2_dovdd18_ir_reg>;
-    DVDD12_IR-supply = <&soc_cam2_dvdd12_ir_reg>;
-    AVDD25_IR-supply = <&soc_cam2_avdd25_ir_reg>;
-    i2c_reg_width = /bits/ 8 <2>;
-    i2c_data_width = /bits/ 8 <1>;
-    i2c_bus = /bits/ 8 <2>;
-    status = "okay";
-};
-
-&vvcam_sensor3 {//cam3 csi0 modified
-	sensor_name = "OV5693";
-	sensor_regulators = "soc_dovdd18_rgb", "soc_dvdd12_rgb", "soc_avdd28_rgb";
-	sensor_regulator_timing_us = <70 50 20>;
-	sensor_pdn = <&gpio1_porta 28 0>; //powerdown pin / shutdown pin 
-	sensor_pdn_delay_us = <4000>; //powerdown pin / shutdown pin actived till I2C ready
-	DOVDD18_RGB-supply = <&soc_dovdd18_rgb_reg>;
-	DVDD12_RGB-supply = <&soc_dvdd12_rgb_reg>;
-	AVDD28_RGB-supply = <&soc_avdd28_rgb_reg>;
-	i2c_reg_width = /bits/ 8 <2>;
-	i2c_data_width = /bits/ 8 <1>;
-	i2c_addr = /bits/ 8 <0x36>;
-	i2c_bus = /bits/ 8 <0>;
-	status = "okay";
-};
-
-&video2 {
-    vi_mem_pool_region = <0>;	// vi_mem: framebuffer, region[0]
-	status = "okay";
-	channel0 {
-		channel_id = <0>;
-		status = "okay";
-		sensor1 {
-			subdev_name = "vivcam";
-			idx = <3>;
-			csi_idx = <0>;
-			mode_idx = <1>;
-			path_type = "SENSOR_2592x1944_LINER";
-		};
-		dma {
-			subdev_name = "vipre";
-			idx = <0>;
-			path_type = "VIPRE_CSI0_ISP1";
-		};
-		isp {
-			subdev_name = "isp";
-			idx = <1>;
-			path_type = "ISP_MI_PATH_MP";
-            output {
-				max_width = <2600>;
-				max_height = <2000>;
-				bit_per_pixel = <12>;
-				frame_count = <3>;
-			};
-		};
-	};
-	channel1 {
-		sensor1 {
-			subdev_name = "vivcam";
-			idx = <3>;
-			csi_idx = <0>;
-			mode_idx = <1>;
-			path_type = "SENSOR_2592x1944_LINER";
-		};
-		isp {
-			subdev_name = "isp";
-			idx = <1>;
-			path_type = "ISP_MI_PATH_SP";
-			output {
-				max_width = <2600>;
-				max_height = <2000>;
-				bit_per_pixel = <12>;
-				frame_count = <3>;
-			};
-		};
-	};
-	channel2 {
-		sensor1 {
-			subdev_name = "vivcam";
-			idx = <3>;
-			csi_idx = <0>;
-			mode_idx = <1>;
-			path_type = "SENSOR_2592x1944_LINER";
-		};
-		isp {
-			subdev_name = "isp";
-			idx = <1>;
-			path_type = "ISP_MI_PATH_SP2_BP";
-			output {
-				max_width = <2600>;
-				max_height = <2000>;
-				bit_per_pixel = <12>;
-				frame_count = <3>;
-			};
-		};
-	};
-};
-
-&video3{
-    vi_mem_pool_region = <0>;	// vi_mem: framebuffer, region[0]
-	status = "okay";
-    channel0 {
-		sensor1 {
-			subdev_name = "vivcam";
-			idx = <3>;
-			csi_idx = <0>;
-			mode_idx = <1>;
-			path_type = "SENSOR_2592x1944_LINER";
-		};
-        dma {
-            subdev_name = "vipre";
-			idx = <0>;
-			path_type = "VIPRE_CSI0_ISP1";
-
-		};
-		isp {
-			subdev_name = "isp";
-			idx = <1>;
-			path_type = "ISP_MI_PATH_MP";
-			output {
-				max_width = <2600>;
-				max_height = <2000>;
-				bit_per_pixel = <12>;
-				frame_count = <3>;
-			};
-		};
-		dw {
-			subdev_name = "dw";
-			idx = <0>;
-			path_type = "DW_DWE_VSE0";
-			dw_dst_depth = <2>;
-		};
-	};
-	channel1 {
-        sensor1 {
-			subdev_name = "vivcam";
-			idx = <3>;
-			csi_idx = <0>;
-			mode_idx = <1>;
-			path_type = "SENSOR_2592x1944_LINER";
-		};
-        dma {
-            subdev_name = "vipre";
-			idx = <0>;
-			path_type = "VIPRE_CSI0_ISP1";
-
-		};
-		isp {
-			subdev_name = "isp";
-			idx = <1>;
-			path_type = "ISP_MI_PATH_MP";
-			output {
-				max_width = <2600>;
-				max_height = <2000>;
-				bit_per_pixel = <12>;
-				frame_count = <3>;
-			};
-		};
-		dw {
-			subdev_name = "dw";
-			idx = <0>;
-			path_type = "DW_DWE_VSE1";
-			dw_dst_depth = <2>;
-		};
-	};
-	channel2 {
-		sensor1 {
-			subdev_name = "vivcam";
-			idx = <3>;
-			csi_idx = <0>;
-			mode_idx = <1>;
-			path_type = "SENSOR_2592x1944_LINER";
-		};
-        dma {
-            subdev_name = "vipre";
-			idx = <0>;
-			path_type = "VIPRE_CSI0_ISP1";
-
-		};
-		isp {
-			subdev_name = "isp";
-			idx = <1>;
-			path_type = "ISP_MI_PATH_MP";
-			output {
-				max_width = <2600>;
-				max_height = <2000>;
-				bit_per_pixel = <12>;
-				frame_count = <3>;
-			};
-		};
-		dw {
-			subdev_name = "dw";
-			idx = <0>;
-			path_type = "DW_DWE_VSE2";
-			dw_dst_depth = <2>;
-		};
-	};
-};
 
 
 &trng {

@@ -40,10 +40,10 @@
 #dtb-$(CONFIG_SOC_THEAD_TH1520_DEV) += th1520-beagle.dtb
 dtb-$(CONFIG_SOC_THEAD) += th1520-lpi4a-product.dtb th1520-lpi4a-product-sec.dtb
 #dtb-$(CONFIG_SOC_THEAD) += th1520-lpi4a-product-crash.dtb
-dtb-$(CONFIG_SOC_THEAD) += th1520-lpi4a-camera-tuning.dtb
-dtb-$(CONFIG_SOC_THEAD) += th1520-lpi4a-hx8279.dtb
+#dtb-$(CONFIG_SOC_THEAD) += th1520-lpi4a-camera-tuning.dtb
+#dtb-$(CONFIG_SOC_THEAD) += th1520-lpi4a-hx8279.dtb
 dtb-$(CONFIG_SOC_THEAD) += th1520-lpi4a-dsi0.dtb
-dtb-$(CONFIG_SOC_THEAD_TH1520_DEV) += th1520-lpi4a-ddr2G.dtb
+#dtb-$(CONFIG_SOC_THEAD_TH1520_DEV) += th1520-lpi4a-ddr2G.dtb
 #dtb-$(CONFIG_SOC_THEAD_TH1520_ANDROID) += th1520-a-val-android.dtb
 #dtb-$(CONFIG_SOC_THEAD_FIRE) += fire-emu.dtb fire-emu-crash.dtb
 #dtb-$(CONFIG_SOC_THEAD_FIRE) += fire-emu-soc-base.dtb fire-emu-soc-c910x4.dtb fire-emu-gpu-dpu-dsi0.dtb fire-emu-vi-dsp-vo.dtb fire-emu-vi-vp-vo.dtb
