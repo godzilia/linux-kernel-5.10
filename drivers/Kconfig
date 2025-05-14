@@ -240,4 +240,6 @@ source "drivers/gpu-viv/Kconfig"
 
 source "drivers/light/Kconfig"
 
+source "drivers/ec/Kconfig"
+
 endmenu

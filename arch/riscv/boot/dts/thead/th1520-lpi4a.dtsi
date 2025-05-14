@@ -1122,21 +1122,14 @@
 					FM_CLK_OUT_2  0x3     0x208
 				>;
 			};
-
-			hidkey_irq_pins: hidkey-irq-0 {
-				gpio-pins {
-					pins = "GPIO0_25";
-					function = "gpio";
-					bias-pull-up;
-					drive-strength = <13>;
-					input-enable;
-					input-schmitt-disable;
-					slew-rate= <0>;
-				};
-			};
-
 			es8326_irq: es8326-irq {
-				thead,pins = < FM_GPIO1_10 0x0 0x202 >;
+				thead,pins = <FM_GPIO1_10 0x0 0x202>;
+			};
+			hidkey_irq_pins: hidkey-irq-0 {
+				thead,pins = <FM_GPIO0_25 0x0 0x208>;
+			};
+			hidtp_irq_pins: hidtp-irq-0 {
+				thead,pins = <FM_GPIO1_8 0x0  0x208>;
 			};
 		};
 };
@@ -1269,18 +1262,37 @@
 };
 
 &i2c1 {
-    clock-frequency = <400000>;
+   	clock-frequency = <400000>;
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c1>;
+	htix5288: htix5288@2c{
+		status = "okay";
+		clock-frequency = <400000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&hidtp_irq_pins>;
+		interrupt-parent = <&gpio1_porta>;
+		interrupts = <8 2>;
+		compatible = "hid-over-i2c";
+		reg = <0x2c>;
+		hid-descr-addr = <0x20>;
+		hid-support-wakeup;
+		wakeup-source;
+	};
 
 };
 
 &i2c2 {
-    clock-frequency = <400000>;
+    	clock-frequency = <400000>;
 	status = "okay";
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_i2c2>;
+	csce2101: csce2101@27{
+		status = "okay";
+		clock-frequency = <400000>;
+		compatible = "ec_csce2101";
+		reg = <0x27>;
+	};
 };
 
 &i2c3 {

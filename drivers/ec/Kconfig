@@ -1,0 +1,17 @@
+config EC
+    tristate "EC"
+    help
+       EC driver.
+
+
+
+
+config EC_I2C_DRIVER
+    tristate "EC I2C Driver"
+    depends on I2C
+    depends on EC
+    help
+      This is a driver for communicating with EC devices via I2C bus.
+      
+      To compile this driver as a module, choose M here.
+      If unsure, say N.

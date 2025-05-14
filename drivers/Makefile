@@ -190,3 +190,4 @@ obj-$(CONFIG_INTERCONNECT)	+= interconnect/
 obj-$(CONFIG_COUNTER)		+= counter/
 obj-$(CONFIG_MOST)		+= most/
 obj-$(CONFIG_LIGHT_GPU_VIV)	+= gpu-viv/
+obj-$(CONFIG_EC)                += ec/
