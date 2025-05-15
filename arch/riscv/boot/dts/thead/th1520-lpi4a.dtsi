@@ -246,7 +246,41 @@
 		regulator-always-on;
 	};
 
+	codec_en1: codec-en1 {
+		compatible = "regulator-fixed";
+		regulator-name = "codec_en1";
+		gpios = <&gpio1_porta 0 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+	wifi: wifi {
+		compatible = "zhihe,aic8800";
+		status = "okay";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_wifi>;
+		rst = <&gpio1_porta 5 GPIO_ACTIVE_LOW>;
+		wifi_power0 = <&wifi_en0>;
+		wifi_power1 = <&wifi_en1>;
+	};
+	wifi_en0: wifi_en0 {
+		compatible = "regulator-fixed";
+		regulator-name = "wifi_en0";
+		gpios = <&gpio1_porta 29 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+		regulator-boot-on;
+	};
 
+	wifi_en1: wifi_en1 {
+		compatible = "regulator-fixed";
+		regulator-name = "wifi_en1";
+		gpios = <&gpio1_porta 30 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+		regulator-boot-on;
+	};	
+	
 	vi_camera_en: vi_camera_en {
 		compatible = "regulator-fixed";
 		regulator-name = "vi_camera_en1";
@@ -257,7 +291,8 @@
 		regulator-always-on;
 		regulator-boot-on;
 	};
-	vi_camera: vi_camera{
+	
+	vi_camera: vi_camera {
 		status = "okay";
 		camera_en = <&vi_camera_en>;
 	};
@@ -1017,7 +1052,7 @@
 				>;
 			};
 
-			pinctrl_wifi_wake: wifi_grp {
+			pinctrl_wifi_wake: wifi_wake {
 				thead,pins = <
 					FM_GPIO0_27	0x0	0x202
 				>;
@@ -1043,13 +1078,23 @@
 			es8326_irq: es8326-irq {
 				thead,pins = <FM_GPIO1_10 0x0 0x202>;
 			};
+
 			hidkey_irq_pins: hidkey-irq-0 {
 				thead,pins = <FM_GPIO0_25 0x0 0x208>;
 			};
+
 			hidtp_irq_pins: hidtp-irq-0 {
 				thead,pins = <FM_CLK_OUT_1 0x3 0x208>;					    
 			};
-		};
+
+			pinctrl_wifi: wifi_grp {
+				thead,pins = <
+					FM_GPIO1_5	0x0	0x208
+					FM_GPIO1_29	0x0	0x208
+					FM_GPIO1_30	0x0	0x208
+				>;
+			};
+	};
 };
 
 &padctrl_aosys {

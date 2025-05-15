@@ -10,14 +10,6 @@
 	compatible = "thead,light-val", "thead,light-lpi4a", "thead,light";
 };
 
-&i2c3 {
-	touch@14 {
-		touchscreen-size-x = <800>;
-		touchscreen-size-y = <1200>;
-		status = "okay";
-	};
-};
-
 &dsi0 {
         status = "okay";
 };

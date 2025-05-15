@@ -23,6 +23,15 @@
 #include <linux/ctype.h>
 #include <linux/random.h>
 #include <linux/vmalloc.h>
+#include <linux/init.h>
+#include <linux/module.h>
+#include <linux/of.h>
+#include <linux/of_gpio.h>
+#include <linux/gpio/consumer.h>
+#include <linux/delay.h>
+#include <linux/mmc/host.h>
+
+
 #include "rwnx_defs.h"
 #include "rwnx_dini.h"
 #include "rwnx_msg_tx.h"
@@ -5979,6 +5988,8 @@ void aicwf_hostif_fail(void)
 	rwnx_driver_err = 1;
 	complete(&hostif_register_done);
 }
+static struct gpio_desc *rst_gpio;
+
 
 static int __init rwnx_mod_init(void)
 {
@@ -5986,14 +5997,73 @@ static int __init rwnx_mod_init(void)
 	rwnx_print_version();
     rwnx_init_cmd_array();
 
-//#ifndef CONFIG_PLATFORM_ROCKCHIP
-	if (aicbsp_set_subsys(AIC_WIFI, AIC_PWR_ON) < 0) {
-		AICWFDBG(LOGERROR, "%s, set power on fail!\n", __func__);
-		if(!aicbsp_get_load_fw_in_fdrv()){
-			return -ENODEV;
-		}
+	struct device_node *wifi_node;
+	int gpio_num, ret;
+    enum of_gpio_flags flags;
+	wifi_node = of_find_compatible_node(NULL, NULL, "zhihe,aic8800");
+    if (!wifi_node) {
+        pr_err("WiFi device tree node not found\n");
+        return -ENODEV;
+    }
+	
+	gpio_num = of_get_named_gpio_flags(wifi_node, "rst", 0, &flags);
+	if (gpio_num < 0) {
+		pr_err("Failed to get RST GPIO: %d\n", gpio_num);
+		of_node_put(wifi_node);
+		return gpio_num;
+	} else {
+		pr_info("wifi get RST gpio_num: %d\n", gpio_num);
 	}
-//#endif
+	
+	if (flags & OF_GPIO_ACTIVE_LOW) {
+		ret = gpio_direction_output(gpio_num, 1);  /* 初始高电平（低有效） */
+		pr_info("RST GPIO is active low\n");
+	} else {
+		ret = gpio_direction_output(gpio_num, 0);  /* 初始低电平（高有效） */
+		pr_info("RST GPIO is active high\n");
+	}
+	
+	if (ret) {
+		pr_err("Failed to set RST GPIO direction: %d\n", ret);
+		gpio_free(gpio_num);
+		of_node_put(wifi_node);
+		return ret;
+	}
+	uint32_t k = 10;
+	while(k--) {
+		/* 5. 可选：执行复位序列 */
+		if (flags & OF_GPIO_ACTIVE_LOW) {
+			gpio_set_value(gpio_num, 0);  /* 拉低复位 */
+			msleep(100); 				  /* 延时 */
+			gpio_set_value(gpio_num, 1);  /* 释放复位 */
+		} else {
+			gpio_set_value(gpio_num, 1);  /* 拉高复位 */
+			msleep(100); 				  /* 延时 */
+			gpio_set_value(gpio_num, 0);  /* 释放复位 */
+		}
+		msleep(3000);
+		if (aicbsp_set_subsys(AIC_WIFI, AIC_PWR_ON) < 0) {
+			AICWFDBG(LOGERROR, "%s, set power on fail!\n", __func__);
+			if(!aicbsp_get_load_fw_in_fdrv()){
+				
+			} else {
+				pr_info("aicbsp_get_load_fw_in_fdrv success k= %d\n", k);
+				break;
+			}
+		} else {
+			pr_info("aicbsp_set_subsys success k= %d\n", k);
+			break;
+		}
+		msleep(10*1000);
+	}
+	if(k==0) {
+		return -ENODEV;
+	}
+	/* 6. 保存 GPIO 描述符供后续使用（可选） */
+	rst_gpio = gpio_to_desc(gpio_num);
+	of_node_put(wifi_node);
+
+
 	init_completion(&hostif_register_done);
 	aicsmac_driver_register();
 	if ((wait_for_completion_timeout(&hostif_register_done, msecs_to_jiffies(REGISTRATION_TIMEOUT)) == 0) || rwnx_driver_err) {
