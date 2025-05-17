@@ -1350,16 +1350,16 @@
 			status = "okay";
 		};
 
-		rtc: rtc@fffff40000 {
-			compatible = "apm,xgene-rtc";
-			reg = <0xff 0xfff40000 0x0 0x1000>;
-			interrupt-parent = <&intc>;
-			interrupts = <74>;
-			clocks = <&dummy_clock_rtc>;
-			clock-names = "rtc";
-			wakeup-source;
-			status = "okay";
-		};
+		//rtc: rtc@fffff40000 {
+		//	compatible = "apm,xgene-rtc";
+		//	reg = <0xff 0xfff40000 0x0 0x1000>;
+		//	interrupt-parent = <&intc>;
+		//	interrupts = <74>;
+		//	clocks = <&dummy_clock_rtc>;
+		//	clock-names = "rtc";
+		//	wakeup-source;
+		//	status = "okay";
+		//};
 
 		usb_1: usb@ffec03f000 {
 			compatible = "thead,dwc3";

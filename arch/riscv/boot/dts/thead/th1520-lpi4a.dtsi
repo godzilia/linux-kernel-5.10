@@ -1050,6 +1050,13 @@
 				>;
 			};
 
+			pinctrl_i2c4: i2c4grp {
+				thead,pins = <
+					FM_GPIO0_18	0x1	0x204	/*	I2C4_SCL  */
+					FM_GPIO0_19	0x1	0x204	/*	I2C4_SDA  */
+				>;
+			};
+
 			pinctrl_wifi_wake: wifi_wake {
 				thead,pins = <
 					FM_GPIO0_27	0x0	0x202
@@ -1263,6 +1270,20 @@
 &i2c4 {
     clock-frequency = <400000>;
 	status = "okay";
+	
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_i2c4>;
+
+	ds1339@68 {
+		compatible = "dallas,ds1339";
+		reg = <0x68>;
+		#clock-cells = <0>;
+		//interrupt-parent = <&gpio1_porta>;
+		//interrupts = <9 1>;
+		clocks = <&dummy_clock_rtc>;
+		clock-names = "rtc";
+		status = "okay";
+	};
 };
 
 &isp0 {
