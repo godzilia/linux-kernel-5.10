@@ -1085,7 +1085,7 @@
 			};
 
 			hidkey_irq_pins: hidkey-irq-0 {
-				thead,pins = <FM_GPIO0_25 0x0 0x208>;
+				thead,pins = <FM_AOGPIO_15 0x0 0x208>;
 			};
 
 			hidtp_irq_pins: hidtp-irq-0 {
@@ -1215,8 +1215,8 @@
 		status = "okay";
 		clock-frequency = <400000>;
 		compatible = "hid-over-i2c";
-		interrupt-parent = <&gpio0_porta>;
-		interrupts = <25 2>;
+		interrupt-parent = <&ao_gpio_porta>;
+		interrupts = <15 2>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&hidkey_irq_pins>;
 		reg = <0x3a>;
