@@ -5993,13 +5993,15 @@ static struct gpio_desc *rst_gpio;
 
 static int __init rwnx_mod_init(void)
 {
+	uint32_t k = 0;
+	struct device_node *wifi_node;
+	int gpio_num, ret;
+    enum of_gpio_flags flags;
+	
 	RWNX_DBG(RWNX_FN_ENTRY_STR);
 	rwnx_print_version();
     rwnx_init_cmd_array();
 
-	struct device_node *wifi_node;
-	int gpio_num, ret;
-    enum of_gpio_flags flags;
 	wifi_node = of_find_compatible_node(NULL, NULL, "zhihe,aic8800");
     if (!wifi_node) {
         pr_err("WiFi device tree node not found\n");
@@ -6029,7 +6031,7 @@ static int __init rwnx_mod_init(void)
 		of_node_put(wifi_node);
 		return ret;
 	}
-	uint32_t k = 10;
+	k = 10;
 	while(k--) {
 		/* 5. 可选：执行复位序列 */
 		if (flags & OF_GPIO_ACTIVE_LOW) {

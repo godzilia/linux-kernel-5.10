@@ -2138,7 +2138,10 @@ static int mmc_rescan_try_freq(struct mmc_host *host, unsigned freq)
 		mmc_hostname(host), __func__, host->f_init);
 
 	mmc_power_up(host, host->ocr_avail);
-
+	mmc_delay(2000);
+	mmc_power_off(host);
+	mmc_delay(2000);
+	mmc_power_up(host, host->ocr_avail);
 	/*
 	 * Some eMMCs (with VCCQ always on) may not be reset after power up, so
 	 * do a hardware reset if possible.

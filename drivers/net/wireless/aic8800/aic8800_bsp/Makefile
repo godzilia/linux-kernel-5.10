@@ -63,8 +63,8 @@ ccflags-$(CONFIG_RADAR_OR_IR_DETECT) += -DCONFIG_RADAR_OR_IR_DETECT
 ccflags-$(CONFIG_FOR_IPCAM) += -DCONFIG_FOR_IPCAM
 
 
-obj-m := $(MODULE_NAME).o
-$(MODULE_NAME)-y := \
+obj-$(CONFIG_AIC8800_WLAN_BSP_SUPPORT) += $(MODULE_NAME).o
+$(MODULE_NAME)-y += \
 	aic8800dc_compat.o \
 	aic8800d80_compat.o \
 	aic_bsp_main.o \

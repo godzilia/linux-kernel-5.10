@@ -158,7 +158,7 @@ CONFIG_RWNX_SW_PROFILING ?= n
 CONFIG_RWNX_DBG ?= y
 CONFIG_DEBUG_FS ?= n
 
-obj-$(CONFIG_AIC8800_WLAN_SUPPORT) := $(MODULE_NAME).o
+obj-$(CONFIG_AIC8800_WLAN_SUPPORT) += $(MODULE_NAME).o
 $(MODULE_NAME)-y := \
 	rwnx_msg_tx.o          \
 	rwnx_msg_rx.o          \

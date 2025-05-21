@@ -15,4 +15,5 @@ config AIC_FW_PATH
 if AIC_WLAN_SUPPORT
 source "drivers/net/wireless/aic8800/aic8800_fdrv/Kconfig"
 source "drivers/net/wireless/aic8800/aic8800_btlpm/Kconfig"
+source "drivers/net/wireless/aic8800/aic8800_bsp/Kconfig"
 endif

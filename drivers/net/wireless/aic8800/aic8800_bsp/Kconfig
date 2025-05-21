@@ -1,0 +1,5 @@
+config AIC8800_WLAN_BSP_SUPPORT
+	tristate "AIC8800 wlan BSP Support"
+	help
+	  This is support for aic wifi BSP PACKET.
+
