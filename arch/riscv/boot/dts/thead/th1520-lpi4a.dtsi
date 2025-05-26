@@ -298,12 +298,12 @@
 
 	gpio-keys {
 		compatible = "gpio-keys";
-		key-sleep {
-			label = "Sleep Wake Key";
+		key-qevent {
+			label = "Qevent Key";
 			wakeup-source;
 			linux,code = <KEY_WAKEUP>;
 			debounce-interval = <1>;
-			gpios = <&ao_gpio_porta 15 0x1>;
+			gpios = <&ao_gpio_porta 12 0x1>;
 		};
 	};
 	aon: aon {
@@ -346,22 +346,6 @@
 			regulator-always-on;
 		};
 
-		soc_vdd33_lcd0_en_reg: soc_lcd0_vdd33_en {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_lcd0_vdd33_en";
-			regulator-min-microvolt = <3300000>;
-			regulator-max-microvolt = <3300000>;
-			enable-active-high;
-		};
-
-		soc_vdd18_lcd0_en_reg: soc_lcd0_vdd18_en {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_lcd0_vdd18_en";
-			regulator-min-microvolt = <1800000>;
-			regulator-max-microvolt = <1800000>;
-			enable-active-high;
-		};
-
 		soc_vdd5v_se_en_reg: soc_vdd5v_se_en {
 			compatible = "regulator-fixed";
 			regulator-name = "soc_vdd5v_se_en";
@@ -393,77 +377,9 @@
 		};
 
 
-		soc_avdd28_rgb_reg: soc_avdd28_rgb {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_avdd28_rgb";
-			regulator-min-microvolt = <2800000>;
-			regulator-max-microvolt = <2800000>;
-			enable-active-high;
-		};
 
-		soc_dovdd18_rgb_reg: soc_dovdd18_rgb {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_dovdd18_rgb";
-			regulator-min-microvolt = <2800000>;
-			regulator-max-microvolt = <2800000>;
-			enable-active-high;
-		};
 
-		soc_dvdd12_rgb_reg: soc_dvdd12_rgb {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_dvdd12_rgb";
-			regulator-min-microvolt = <2800000>;
-			regulator-max-microvolt = <2800000>;
-			enable-active-high;
-		};
 
-		soc_avdd25_ir_reg: soc_avdd25_ir {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_avdd25_ir";
-			regulator-min-microvolt = <2500000>;
-			regulator-max-microvolt = <2500000>;
-			enable-active-high;
-		};
-
-		soc_dovdd18_ir_reg: soc_dovdd18_ir {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_dovdd18_ir";
-			regulator-min-microvolt = <1800000>;
-			regulator-max-microvolt = <1800000>;
-			enable-active-high;
-		};
-
-		soc_dvdd12_ir_reg: soc_dvdd12_ir {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_dvdd12_ir";
-			regulator-min-microvolt = <1200000>;
-			regulator-max-microvolt = <1200000>;
-			enable-active-high;
-		};
-
-		soc_cam2_avdd25_ir_reg: soc_cam2_avdd25_ir {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_cam2_avdd25_ir";
-			regulator-min-microvolt = <2500000>;
-			regulator-max-microvolt = <2500000>;
-			enable-active-high;
-		};
-
-		soc_cam2_dovdd18_ir_reg: soc_cam2_dovdd18_ir {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_cam2_dovdd18_ir";
-			regulator-min-microvolt = <1800000>;
-			regulator-max-microvolt = <1800000>;
-			enable-active-high;
-		};
-
-		soc_cam2_dvdd12_ir_reg: soc_cam2_dvdd12_ir {
-			compatible = "regulator-fixed";
-			regulator-name = "soc_cam2_dvdd12_ir";
-			regulator-min-microvolt = <1200000>;
-			regulator-max-microvolt = <1200000>;
-			enable-active-high;
-		};
 
 			dvdd_cpu_reg: appcpu_dvdd {
 				compatible = "thead,light-dialog-pmic";
@@ -1093,11 +1009,15 @@
 			};
 
 			hidkey_irq_pins: hidkey-irq-0 {
-				thead,pins = <FM_AOGPIO_15 0x0 0x208>;
+				thead,pins = <FM_GPIO0_25 0x0 0x208>;
 			};
 
 			hidtp_irq_pins: hidtp-irq-0 {
 				thead,pins = <FM_GPIO1_8 0x0 0x208>;					    
+			};
+
+			qevent_irq_pins: qevent_irq-0 {
+				thead,pins = <FM_AOGPIO_12 0x0 0x208>;
 			};
 
 			pinctrl_wifi: wifi_grp {
@@ -1223,8 +1143,8 @@
 		status = "okay";
 		clock-frequency = <400000>;
 		compatible = "hid-over-i2c";
-		interrupt-parent = <&ao_gpio_porta>;
-		interrupts = <15 2>;
+		interrupt-parent = <&gpio0_porta>;
+		interrupts = <25 2>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&hidkey_irq_pins>;
 		reg = <0x3a>;

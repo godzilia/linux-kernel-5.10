@@ -2,6 +2,7 @@
 #include <linux/module.h>
 #include <linux/regmap.h>
 #include <linux/delay.h>
+#include <linux/syscore_ops.h>
 
 
 #define EC_REG_START   					 (EC_MAIN_VERSION)   				 /* 起始寄存器地址 */
@@ -28,13 +29,13 @@
 
 
 enum e_soc_acpi_status {
-	ACPI_S0 = 0x0,      //work
-	ACPI_S1 = 0x1,
-	ACPI_S2 = 0x2,
-	ACPI_S3 = 0x3,      //str
-	ACPI_S4 = 0x4,      //std
-	ACPI_S5 = 0x5,      //poweroff
-	ACPI_S6 = 0x6,      //reboot
+	ACPI_WORK 	  = 0x0,      //work  S0
+	ACPI_S1 	  = 0x1,
+	ACPI_S2 	  = 0x2,
+	ACPI_STR 	  = 0x3,      //str
+	ACPI_STD 	  = 0x4,      //std
+	ACPI_POWEROFF = 0x5,      //poweroff
+	ACPI_REBOOT   = 0x6,      //reboot
 };
 
 struct ec_device {
@@ -43,6 +44,7 @@ struct ec_device {
     struct mutex lock;
 };
 
+struct ec_device *ec;
 
 
 /* EC寄存器读写状态回调 */
@@ -168,17 +170,17 @@ static int ec_write_block(struct ec_device *ec, u8 reg, const u8 *buf, int len)
 static int ec_suspend(struct device *dev)
 {
     struct ec_device *ec = dev_get_drvdata(dev);
-    int ret;
+    int ret = 0;
+	u8 val = 0;
 
     dev_info(dev, "Suspending EC device...\n");
     
     /* 向EC发送挂起命令 */
-    ret = ec_write_reg(ec, EC_SOC_ACPI_STATUS, ACPI_S3);
+    ret = ec_write_reg(ec, EC_SOC_ACPI_STATUS, ACPI_STR);
     if (ret) {
         dev_err(dev, "Failed to send suspend command: %d\n", ret);
         return ret;
     }
-	u8 val = 0;
 	ec_read_reg(ec,EC_SOC_ACPI_STATUS,&val);
 	dev_info(dev, "%s:write ec EC_SOC_ACPI_STATUS: %d\n",__func__,val);
 
@@ -189,28 +191,70 @@ static int ec_suspend(struct device *dev)
 static int ec_resume(struct device *dev)
 {
     struct ec_device *ec = dev_get_drvdata(dev);
-    int ret;
+    int ret = 0;
+	u8 val = 0;
 
     dev_info(dev, "Resuming EC device...\n");
     
     /* 向EC发送恢复命令 */
-    ret = ec_write_reg(ec, EC_SOC_ACPI_STATUS, ACPI_S0);
+    ret = ec_write_reg(ec, EC_SOC_ACPI_STATUS, ACPI_WORK);
     if (ret) {
         dev_err(dev, "Failed to send resume command: %d\n", ret);
         return ret;
     }
-	u8 val = 0;
 	ec_read_reg(ec,EC_SOC_ACPI_STATUS,&val);
     dev_info(dev, "%s:write ec EC_SOC_ACPI_STATUS: %d\n",__func__,val);
     return 0;
 }
 static SIMPLE_DEV_PM_OPS(ec_pm_ops, ec_suspend, ec_resume);
 
+static void TH1520_syscore_shutdown(void)
+{
+	int ret = 0;
+	u8 val = 0;
+	if (system_state == SYSTEM_POWER_OFF) {
+		printk("poweroff %s\n", __func__);
+		ret = ec_write_reg(ec, EC_SOC_ACPI_STATUS, ACPI_POWEROFF);
+		if (ret) {
+			printk(" @@@@@@@@@@@@ fail power off %s %d \n",
+			       __func__, __LINE__);
+		}
+		mdelay(10);
+		ec_read_reg(ec,EC_SOC_ACPI_STATUS,&val);
+    	printk("%s:write ec EC_SOC_ACPI_STATUS: %d\n",__func__,val);
+		mdelay(10);
+#if 0
+		while (1) {
+			ret = ec_write_reg(ec, EC_SOC_ACPI_STATUS, ACPI_POWEROFF);
+			if (ret) {
+				mdelay(10);
+				printk(" @@@@@@@@@@@@ fail power off %s %d \n",
+					__func__, __LINE__);
+			}
+		}
+#endif
+	}else if(system_state == SYSTEM_RESTART) {
+		printk("reboot %s\n",__func__);
+
+		ret = ec_write_reg(ec, EC_SOC_ACPI_STATUS, ACPI_REBOOT);
+		if(ret) {
+			printk("set red-led error\n");
+		}
+		mdelay(10);
+		ec_read_reg(ec,EC_SOC_ACPI_STATUS,&val);
+    	printk( "%s:write ec EC_SOC_ACPI_STATUS: %d\n",__func__,val);
+	}
+}
+
+
+static struct syscore_ops TH1520_syscore_ops = {
+	.shutdown = TH1520_syscore_shutdown,
+};
+
 static int ec_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
 {
-	struct ec_device *ec;
+	
     struct regmap_config config;
-    int ret;
 
 	uint8_t ec_main_version = 0;
     uint8_t ec_sub_version = 0;
@@ -240,7 +284,7 @@ static int ec_probe(struct i2c_client *client, const struct i2c_device_id *dev_i
         .use_single_read = true,
         .use_single_write = true,
     };
-
+	register_syscore_ops(&TH1520_syscore_ops);
     /* 初始化regmap */
     ec->regmap = devm_regmap_init_i2c(client, &config);
     if (IS_ERR(ec->regmap)) {
@@ -268,7 +312,7 @@ static int ec_probe(struct i2c_client *client, const struct i2c_device_id *dev_i
         return -EIO;
     }
 
-    ec_i2c_read(client, 0xaa);
+    read_back = ec_i2c_read(client, 0xaa);
     printk(KERN_INFO "0xaa=0x%x\n", read_back);
     return 0;
 }
