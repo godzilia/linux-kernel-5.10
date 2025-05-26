@@ -288,7 +288,6 @@
 		pinctrl-0 = <&pinctrl_cam_en>;
 		gpios = <&gpio2_porta 18 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
-		regulator-always-on;
 		regulator-boot-on;
 	};
 	
@@ -297,7 +296,16 @@
 		camera_en = <&vi_camera_en>;
 	};
 
-
+	gpio-keys {
+		compatible = "gpio-keys";
+		key-sleep {
+			label = "Sleep Wake Key";
+			wakeup-source;
+			linux,code = <KEY_WAKEUP>;
+			debounce-interval = <1>;
+			gpios = <&ao_gpio_porta 15 0x1>;
+		};
+	};
 	aon: aon {
 		compatible = "thead,light-aon";
 		mbox-names = "aon";
