@@ -1542,8 +1542,8 @@
 };
 
 &usb_1 {
-	hubswitch-gpio = <&ao_gpio_porta 4 0>;
-	vbus-supply = <&soc_vbus_en_reg>;
+	hubswitch-gpio = <&gpio1_porta 28 GPIO_ACTIVE_LOW>;
+	//vbus-supply = <&soc_vbus_en_reg>;
 	//hub1v2-supply = <&reg_usb_hub_vdd1v2>;
 	//hub5v-supply = <&reg_usb_hub_vcc5v>;
 };
