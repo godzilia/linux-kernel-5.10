@@ -254,6 +254,16 @@
 		regulator-always-on;
 		regulator-boot-on;
 	};
+
+	dmic_en: dmic_en {
+		compatible = "regulator-fixed";
+		regulator-name = "dmic_en";
+		gpios = <&gpio2_porta 20 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+		regulator-boot-on;
+	};
+
 	wifi: wifi {
 		compatible = "zhihe,aic8800";
 		status = "okay";

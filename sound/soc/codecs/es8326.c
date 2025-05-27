@@ -828,7 +828,7 @@ static void es8326_jack_detect_handler(struct work_struct *work)
 			snd_soc_jack_report(es8326->jack, 0, SND_JACK_HEADSET);
 			/* mute adc when mic path switch */
 			regmap_write(es8326->regmap, ES8326_ADC1_SRC, 0x44);
-			regmap_write(es8326->regmap, ES8326_ADC2_SRC, 0x66);
+			//regmap_write(es8326->regmap, ES8326_ADC2_SRC, 0x66);
 		}
 		es8326->hp = 0;
 		regmap_update_bits(es8326->regmap, ES8326_HPDET_TYPE, 0x03, 0x01); //
@@ -1080,6 +1080,12 @@ static int es8326_resume(struct snd_soc_component *component)
 
 	regmap_write(es8326->regmap,  ES8326_ADC1_VOL, 0xf1);
 	regmap_write(es8326->regmap,  ES8326_ADC2_VOL, 0xf1);
+
+	regmap_write(es8326->regmap, ES8326_SDINOUT1_IO, 0x00);
+	usleep_range(5000, 10000);
+	regmap_write(es8326->regmap, ES8326_SDINOUT1_IO, 0x90);
+	
+	regmap_write(es8326->regmap, ES8326_ADC1_SRC, 0x44);
 
 	snd_soc_component_update_bits(component, ES8326_FMT, ES8326_DATA_LEN_MASK, 0xc);
 
