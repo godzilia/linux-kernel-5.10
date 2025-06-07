@@ -495,18 +495,43 @@ static void update_fb(struct vs_plane *plane, u8 display_id,
     struct vs_plane_state *plane_state = to_vs_plane_state(state);
     struct drm_framebuffer *drm_fb = state->fb;
     struct drm_rect *src = &state->src;
+    u32 src_x, src_y;
+
+    src_y = src->y1 >> 16;
+    src_x = src->x1 >> 16;
 
     fb->display_id = display_id;
     fb->y_address = plane->dma_addr[0];
+    if (src_y)
+      fb->y_address += src_y * drm_fb->pitches[0];
+    if (src_x)
+      fb->y_address += src_x * drm_fb->format->cpp[0];
+
     fb->y_stride = drm_fb->pitches[0];
     if (drm_fb->format->format == DRM_FORMAT_YVU420) {
         fb->u_address = plane->dma_addr[2];
+        if (src_y)
+          fb->u_address += src_y * drm_fb->pitches[2];
+        if (src_x)
+          fb->u_address += src_x * drm_fb->format->cpp[2];
         fb->v_address = plane->dma_addr[1];
+        if (src_y)
+          fb->v_address += src_y * drm_fb->pitches[1];
+        if (src_x)
+          fb->v_address += src_x * drm_fb->format->cpp[1];
         fb->u_stride = drm_fb->pitches[2];
         fb->v_stride = drm_fb->pitches[1];
     } else {
         fb->u_address = plane->dma_addr[1];
+        if (src_y)
+          fb->u_address += src_y * drm_fb->pitches[1];
+        if (src_x)
+          fb->u_address += src_x * drm_fb->format->cpp[1];
         fb->v_address = plane->dma_addr[2];
+        if (src_y)
+          fb->v_address += src_y * drm_fb->pitches[2];
+        if (src_x)
+          fb->v_address += src_x * drm_fb->format->cpp[2];
         fb->u_stride = drm_fb->pitches[1];
         fb->v_stride = drm_fb->pitches[2];
     }
@@ -743,14 +768,23 @@ static void update_cursor_size(struct drm_plane_state *state, struct dc_hw_curso
 static void update_cursor_plane(struct vs_dc *dc, struct vs_plane *plane)
 {
     struct drm_plane_state *state = plane->base.state;
-    struct drm_framebuffer *drm_fb = state->fb;
     struct dc_hw_cursor cursor;
 
     cursor.address = plane->dma_addr[0];
-    cursor.x = state->crtc_x;
-    cursor.y = state->crtc_y;
-    cursor.hot_x = drm_fb->hot_x;
-    cursor.hot_y = drm_fb->hot_y;
+    if (state->crtc_x > 0) {
+        cursor.x = state->crtc_x;
+        cursor.hot_x = 0;
+    } else {
+        cursor.hot_x = -state->crtc_x;
+        cursor.x = 0;
+    }
+    if (state->crtc_y > 0) {
+        cursor.y = state->crtc_y;
+        cursor.hot_y = 0;
+    } else {
+        cursor.hot_y = -state->crtc_y;
+        cursor.y = 0;
+    }
     cursor.display_id = to_vs_display_id(dc, state->crtc);
     update_cursor_size(state, &cursor);
     cursor.enable = true;
