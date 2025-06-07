@@ -468,12 +468,6 @@ static const struct drm_ioctl_desc etnaviv_ioctls[] = {
 	ETNA_IOCTL(PM_QUERY_SIG, pm_query_sig, DRM_RENDER_ALLOW),
 };
 
-static const struct vm_operations_struct vm_ops = {
-	.fault = etnaviv_gem_fault,
-	.open = drm_gem_vm_open,
-	.close = drm_gem_vm_close,
-};
-
 static const struct file_operations fops = {
 	.owner              = THIS_MODULE,
 	.open               = drm_open,
@@ -490,16 +484,9 @@ static struct drm_driver etnaviv_drm_driver = {
 	.driver_features    = DRIVER_GEM | DRIVER_RENDER,
 	.open               = etnaviv_open,
 	.postclose           = etnaviv_postclose,
-	.gem_free_object_unlocked = etnaviv_gem_free_object,
-	.gem_vm_ops         = &vm_ops,
 	.prime_handle_to_fd = drm_gem_prime_handle_to_fd,
 	.prime_fd_to_handle = drm_gem_prime_fd_to_handle,
-	.gem_prime_pin      = etnaviv_gem_prime_pin,
-	.gem_prime_unpin    = etnaviv_gem_prime_unpin,
-	.gem_prime_get_sg_table = etnaviv_gem_prime_get_sg_table,
 	.gem_prime_import_sg_table = etnaviv_gem_prime_import_sg_table,
-	.gem_prime_vmap     = etnaviv_gem_prime_vmap,
-	.gem_prime_vunmap   = etnaviv_gem_prime_vunmap,
 	.gem_prime_mmap     = etnaviv_gem_prime_mmap,
 #ifdef CONFIG_DEBUG_FS
 	.debugfs_init       = etnaviv_debugfs_init,
@@ -685,8 +672,24 @@ static int __init etnaviv_init(void)
 			of_node_put(np);
 			goto unregister_platform_driver;
 		}
-		pdev->dev.coherent_dma_mask = DMA_BIT_MASK(40);
-		pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
+
+		/*
+		 * PTA and MTLB can have 40 bit base addresses, but
+		 * unfortunately, an entry in the MTLB can only point to a
+		 * 32 bit base address of a STLB. Moreover, to initialize the
+		 * MMU we need a command buffer with a 32 bit address because
+		 * without an MMU there is only an indentity mapping between
+		 * the internal 32 bit addresses and the bus addresses.
+		 *
+		 * To make things easy, we set the dma_coherent_mask to 32
+		 * bit to make sure we are allocating the command buffers and
+		 * TLBs in the lower 4 GiB address space.
+		 */
+		if (dma_set_mask(&pdev->dev, DMA_BIT_MASK(40)) ||
+		    dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32))) {
+			dev_dbg(&pdev->dev, "No suitable DMA available\n");
+			return -ENODEV;
+		}
 
 		/*
 		 * Apply the same DMA configuration to the virtual etnaviv

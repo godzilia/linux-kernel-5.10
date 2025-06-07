@@ -91,6 +91,7 @@ int etnaviv_iommu_map_gem(struct etnaviv_iommu_context *context,
 	struct etnaviv_vram_mapping *mapping, u64 va);
 void etnaviv_iommu_unmap_gem(struct etnaviv_iommu_context *context,
 	struct etnaviv_vram_mapping *mapping);
+void etnaviv_iommu_reap_mapping(struct etnaviv_vram_mapping *mapping);
 
 int etnaviv_iommu_get_suballoc_va(struct etnaviv_iommu_context *ctx,
 				  struct etnaviv_vram_mapping *mapping,
@@ -122,5 +123,7 @@ etnaviv_iommuv2_context_alloc(struct etnaviv_iommu_global *global);
 
 u32 etnaviv_iommuv2_get_mtlb_addr(struct etnaviv_iommu_context *context);
 unsigned short etnaviv_iommuv2_get_pta_id(struct etnaviv_iommu_context *context);
+
+void etnaviv_iommuv2_update_pta_entry(struct etnaviv_iommu_context *context);
 
 #endif /* __ETNAVIV_MMU_H__ */
