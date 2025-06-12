@@ -40,6 +40,7 @@ struct panel_info {
 	const struct lt9711_panel_desc *desc;
 
 	struct gpio_desc	*enable;
+	struct gpio_desc	*reset;
 	//struct regulator	*hsvcc;
 	//struct regulator	*vspn3v3;
 
@@ -71,7 +72,6 @@ static int lt9711_disable(struct drm_panel *panel)
 {
 	struct panel_info *pinfo = to_panel_info(panel);
 	int err;
-
 	if (!pinfo->enabled)
 		return 0;
 
@@ -123,6 +123,9 @@ static int lt9711_prepare(struct drm_panel *panel)
 		return 0;
 	
 	gpiod_set_value(pinfo->enable, 1);
+	gpiod_set_value(pinfo->reset, 1);
+	usleep_range(1000, 2000);
+	gpiod_set_value(pinfo->reset, 0);
 #if 0
 	//gpiod_set_value(pinfo->reset, 0);
 
@@ -168,7 +171,10 @@ static int lt9711_enable(struct drm_panel *panel)
 		return ret;
 	}
 
-	msleep(10);
+	//gpiod_set_value(pinfo->reset, 1);
+	//msleep(10);
+	//gpiod_set_value(pinfo->reset, 0);
+	//msleep(10);
 
 	ret = mipi_dsi_dcs_set_display_on(pinfo->link);
 	if (ret < 0) {
@@ -259,12 +265,12 @@ static int lt9711_panel_add(struct panel_info *pinfo)
 	if (IS_ERR(pinfo->enable))
 		return dev_err_probe(dev, PTR_ERR(pinfo->enable),
 				"Couldn't get our enable GPIO\n");
-#if 0
 	pinfo->reset = devm_gpiod_get(dev, "reset", GPIOD_OUT_LOW);
 	if (IS_ERR(pinfo->reset))
 		return dev_err_probe(dev, PTR_ERR(pinfo->reset),
 				"Couldn't get our reset GPIO\n");
 
+#if 0
 	pinfo->hsvcc =  devm_regulator_get(dev, "hsvcc");
 	if (IS_ERR(pinfo->hsvcc))
 		return dev_err_probe(dev, PTR_ERR(pinfo->hsvcc),
