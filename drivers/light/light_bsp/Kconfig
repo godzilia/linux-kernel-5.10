@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+config LIGHT_BSP
+	tristate "light bsp driver"
+	help
+	  This is light bsp driver.
+
+if LIGHT_BSP
+config LIGHT_SWITCH_GPIO
+        tristate "light switch gpio driver"
+	help
+          This driver provides support for light switch for gpio.
+endif

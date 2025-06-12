@@ -290,7 +290,17 @@
 		regulator-always-on;
 		regulator-boot-on;
 	};	
-	
+	dip_switch: dip_switch {
+		compatible = "zhihe,dip-switch";
+		switch-gpios = <&gpio1_porta 26 GPIO_ACTIVE_HIGH>; /* 拨码开关连接的GPIO */
+		power-supply = <&vi_camera_en>; /* 引用电源调节器 */
+		interrupt-parent = <&gpio1_porta>;
+		interrupts = <26 2>;
+		status = "okay";
+    };
+       
+
+
 	vi_camera_en: vi_camera_en {
 		compatible = "regulator-fixed";
 		regulator-name = "vi_camera_en1";
@@ -298,12 +308,6 @@
 		pinctrl-0 = <&pinctrl_cam_en>;
 		gpios = <&gpio2_porta 18 GPIO_ACTIVE_HIGH>;
 		enable-active-high;
-		regulator-boot-on;
-	};
-	
-	vi_camera: vi_camera {
-		status = "okay";
-		camera_en = <&vi_camera_en>;
 	};
 
 	gpio-keys {
