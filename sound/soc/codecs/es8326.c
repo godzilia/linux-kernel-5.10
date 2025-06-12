@@ -189,7 +189,7 @@ static int es8326_hprvol_set(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
-static const DECLARE_TLV_DB_SCALE(dac_vol_tlv, -9550, 50, 32);
+static const DECLARE_TLV_DB_SCALE(dac_vol_tlv, -9550, 50, 0);
 static const DECLARE_TLV_DB_SCALE(adc_vol_tlv, -9550, 50, 0);
 static const DECLARE_TLV_DB_SCALE(adc_analog_pga_tlv, 0, 300, 0);
 static const DECLARE_TLV_DB_SCALE(adc_pga_tlv, 0, 600, 0);
