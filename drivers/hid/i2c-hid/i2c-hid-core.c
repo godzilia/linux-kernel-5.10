@@ -41,6 +41,10 @@
 
 #include <linux/platform_data/i2c-hid.h>
 
+#include <linux/gpio.h>
+#include <linux/of_gpio.h>
+
+
 #include "../hid-ids.h"
 #include "i2c-hid.h"
 
@@ -1042,6 +1046,9 @@ static int i2c_hid_probe(struct i2c_client *client,
 			 const struct i2c_device_id *dev_id)
 {
 	int ret;
+	uint32_t k = 0;
+	int gpio_num = 0;
+    enum of_gpio_flags flags;	
 	struct i2c_hid *ihid;
 	struct hid_device *hid;
 	__u16 hidRegister;
@@ -1129,7 +1136,57 @@ static int i2c_hid_probe(struct i2c_client *client,
 		goto err_regulator;
 	}
 
-	ret = i2c_hid_fetch_hid_descriptor(ihid);
+
+
+	gpio_num = of_get_named_gpio_flags(client->dev.of_node, "rst", 0, &flags);
+	if (gpio_num < 0) {
+		dev_info(&client->dev,"Failed to get RST GPIO: %d\n", gpio_num);
+		ret = i2c_hid_fetch_hid_descriptor(ihid);
+	} else {
+		dev_info(&client->dev,"i2c_hid get RST gpio_num: %d\n", gpio_num);
+	
+		if (flags & OF_GPIO_ACTIVE_LOW) {
+			ret = gpio_direction_output(gpio_num, 1);  /* 初始高电平（低有效） */
+			dev_info(&client->dev,"RST GPIO is active low\n");
+		} else {
+			ret = gpio_direction_output(gpio_num, 0);  /* 初始低电平（高有效） */
+			dev_info(&client->dev,"RST GPIO is active high\n");
+		}
+		
+		if (ret) {
+			dev_info(&client->dev,"Failed to set RST GPIO direction: %d\n", ret);
+			gpio_free(gpio_num);
+			return ret;
+		}
+		k = 10;
+		while(k--) {
+			/* 5. 可选：执行复位序列 */
+			if (flags & OF_GPIO_ACTIVE_LOW) {
+				gpio_set_value(gpio_num, 0);  /* 拉低复位 */
+				msleep(100);				  /* 延时 */
+				gpio_set_value(gpio_num, 1);  /* 释放复位 */
+			} else {
+				gpio_set_value(gpio_num, 1);  /* 拉高复位 */
+				msleep(100);				  /* 延时 */
+				gpio_set_value(gpio_num, 0);  /* 释放复位 */
+			}
+			msleep(1000);
+			ret = i2c_hid_fetch_hid_descriptor(ihid);
+			if (ret < 0) {
+				dev_info(&client->dev,"i2c_hid_fetch_hid_descriptor error k= %d\n", k);
+			} else {
+				dev_info(&client->dev,"i2c_hid_fetch_hid_descriptor success k= %d\n", k);
+				break;
+			}
+			msleep(1000);
+		}
+		if(k==0) {
+			ret = -1;
+		}
+		gpio_free(gpio_num);
+	}
+
+	
 	if (ret < 0)
 		goto err_regulator;
 

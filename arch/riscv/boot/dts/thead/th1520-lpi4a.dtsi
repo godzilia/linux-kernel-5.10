@@ -1011,8 +1011,11 @@
 				thead,pins = <FM_GPIO0_25 0x0 0x208>;
 			};
 
-			hidtp_irq_pins: hidtp-irq-0 {
-				thead,pins = <FM_GPIO1_8 0x0 0x208>;					    
+			hidtp_pins: hidtp-pins-0 {
+				thead,pins = <
+					FM_GPIO1_8	0x0	0x208     //irq	
+					FM_GPIO1_7	0x0	0x208     //rst
+				>;				
 			};
 
 			qevent_irq_pins: qevent_irq-0 {
@@ -1162,16 +1165,17 @@
 		status = "okay";
 		clock-frequency = <400000>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&hidtp_irq_pins>;
+		pinctrl-0 = <&hidtp_pins>;
 		interrupt-parent = <&gpio1_porta>;
 		interrupts = <8 2>;
 		compatible = "hid-over-i2c";
 		reg = <0x2c>;
 		hid-descr-addr = <0x20>;
+		rst = <&gpio1_porta 7 GPIO_ACTIVE_LOW>;
+		post-power-on-delay-ms = <100>;
 		hid-support-wakeup;
 		wakeup-source;
 	};
-
 };
 
 &i2c2 {
