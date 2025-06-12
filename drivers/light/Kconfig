@@ -8,4 +8,5 @@ menu "Light backend drivers"
 source "drivers/light/light_mailbox/Kconfig"
 source "drivers/light/light_blk/Kconfig"
 source "drivers/light/light_net/Kconfig"
+source "drivers/light/light_bsp/Kconfig"
 endmenu
