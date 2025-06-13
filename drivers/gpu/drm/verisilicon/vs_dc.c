@@ -1064,9 +1064,9 @@ static int dc_bind(struct device *dev, struct device *master, void *data)
             drm_dev->mode_config.min_width = plane_info->min_width;
             drm_dev->mode_config.min_height =
                             plane_info->min_height;
-            drm_dev->mode_config.max_width = plane_info->max_width;
-            drm_dev->mode_config.max_height =
-                            plane_info->max_height;
+            //drm_dev->mode_config.max_width = plane_info->max_width;
+            //drm_dev->mode_config.max_height =
+                            //plane_info->max_height;
         }
 
         if (plane_info->type == DRM_PLANE_TYPE_CURSOR) {
