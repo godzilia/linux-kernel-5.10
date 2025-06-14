@@ -194,6 +194,7 @@
 			reg = <0>;
 			status = "okay";
 			compatible = "riscv";
+			model = "ZH T1";
 			riscv,isa = "rv64imafdcvsu";
 			mmu-type = "riscv,sv39";
 			cpu-freq = "1.848Ghz";
@@ -242,6 +243,7 @@
 			reg = <1>;
 			status = "okay";
 			compatible = "riscv";
+			model = "ZH T1";
 			riscv,isa = "rv64imafdcvsu";
 			mmu-type = "riscv,sv39";
 			cpu-freq = "1.848Ghz";
@@ -289,6 +291,7 @@
 			reg = <2>;
 			status = "okay";
 			compatible = "riscv";
+			model = "ZH T1";
 			riscv,isa = "rv64imafdcvsu";
 			mmu-type = "riscv,sv39";
 			cpu-freq = "1.848Ghz";
@@ -336,6 +339,7 @@
 			reg = <3>;
 			status = "okay";
 			compatible = "riscv";
+			model = "ZH T1";
 			riscv,isa = "rv64imafdcvsu";
 			mmu-type = "riscv,sv39";
 			cpu-freq = "1.848Ghz";
