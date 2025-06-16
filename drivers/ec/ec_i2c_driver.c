@@ -5,6 +5,8 @@
 #include <linux/syscore_ops.h>
 #include <linux/power_supply.h>
 #include <linux/mutex.h>
+#include <linux/input.h>
+#include <linux/workqueue.h>
 
 #define EC_REG_START   					 (EC_MAIN_VERSION)   				 /* 起始寄存器地址 */
 #define EC_REG_END     					 (EC_BAT_FULL_CHARGE_CAPACITY_H)     /* 结束寄存器地址 */
@@ -27,6 +29,14 @@
 #define EC_BAT_PRESENT_CURRENT_H		 (0x2B)
 #define EC_BAT_FULL_CHARGE_CAPACITY_L	 (0x2C)
 #define EC_BAT_FULL_CHARGE_CAPACITY_H	 (0x2D)
+
+/* 新增寄存器定义 */
+#define EC_QEVENT_DATA                 (0x10)    /* Q事件数据寄存器 */
+#define EC_LID_STATUS                  (0x06)    /* 盖子状态寄存器 */
+
+/* 新增事件类型定义 */
+#define QEVENT_POWER                   (0xB4)    /* 电源事件 */
+#define QEVENT_LID                     (0xD0)    /* 盖子事件 */
 
 enum e_soc_acpi_status {
 	ACPI_WORK 	  = 0x0,      //work  S0
@@ -78,6 +88,19 @@ enum battery_status {
 	BATTERY_STATUS_POWER_DRAINED = 5,
 };
 
+/* 盖子状态枚举 */
+enum lid_status {
+    LID_OPEN = 0,
+    LID_CLOSED = 1,
+};
+
+/* 工作队列参数结构体 */
+struct wakeup_work_data {
+    struct work_struct work;
+    struct ec_device *ec;
+    u8 qevent_data;
+};
+
 struct ec_device {
     struct i2c_client *client;
     struct regmap *regmap;
@@ -100,15 +123,32 @@ struct ec_device {
     enum battery_charge_status charge_status;
     enum battery_power_status power_status;
     enum battery_full_status full_status;
+    
+    /* 输入事件处理 */
+    struct input_handler wakeup_handler;    
+    struct input_dev *input_dev;             /* 用于上报SW_LID事件的输入设备 */
+    
+    /* 工作队列相关 */
+    struct workqueue_struct *wakeup_wq;
+    struct wakeup_work_data wakeup_work;
 };
 
 struct ec_device *ec;
+
+/* 函数前向声明 */
+static void handle_lid_event(struct ec_device *ec);
+static void wakeup_event(struct input_handle *handle, unsigned int type,
+                       unsigned int code, int value);
+static int wakeup_connect(struct input_handler *handler, struct input_dev *dev,
+                         const struct input_device_id *id);
+static void wakeup_disconnect(struct input_handle *handle);
+static void wakeup_work_handler(struct work_struct *work);
 
 /* EC寄存器读写状态回调 */
 static bool ec_reg_volatile(struct device *dev, unsigned int reg)
 {
     /* 某些寄存器可能是易变的，例如状态寄存器 */
-    if (reg == EC_SOC_ACPI_STATUS || reg == EC_POWER_STATUS)
+    if (reg == EC_SOC_ACPI_STATUS || reg == EC_POWER_STATUS || reg == EC_QEVENT_DATA)
         return true;
     return false;
 }
@@ -126,58 +166,6 @@ static bool ec_reg_writeable(struct device *dev, unsigned int reg)
     if (reg == EC_SOC_ACPI_STATUS)
         return true;  /* 例如，命令寄存器和控制寄存器可写 */
     return false;
-}
-
-static int ec_i2c_write(struct i2c_client *client, uint8_t reg, uint8_t val)
-{
-    int ret = -1;
-    int retries = 0;
-    uint8_t buf[2] = { reg, val };
-    struct i2c_msg msg = {
-        .flags = !I2C_M_RD,
-        .addr = client->addr,
-        .len = 2,
-        .buf = buf,
-    };
-
-    while (retries < 5) {
-        ret = i2c_transfer(client->adapter, &msg, 1);
-        if (ret == 1)
-            return 0;
-        retries++;
-    }
-
-    return ret;
-}
-
-static int ec_i2c_read(struct i2c_client *client, uint8_t reg)
-{
-    int ret = -1;
-    int retries = 0;
-    uint8_t buf[2] = { reg, 0 };
-    struct i2c_msg msgs[2] = {
-        [0] = {
-            .flags = 0,
-            .addr = client->addr,
-            .len = 1,
-            .buf = &buf[0],
-        },
-        [1] = {
-            .flags = I2C_M_RD,
-            .addr = client->addr,
-            .len = 1,
-            .buf = &buf[1],
-        }
-    };
-
-    while (retries < 5) {
-        ret = i2c_transfer(client->adapter, msgs, 2);
-        if (ret == 2)
-            return buf[1];
-        retries++;
-    }
-
-    return ret;
 }
 
 /* 读取单个寄存器 */
@@ -199,30 +187,6 @@ static int ec_write_reg(struct ec_device *ec, u8 reg, u8 val)
     
     mutex_lock(&ec->lock);
     ret = regmap_write(ec->regmap, reg, val);
-    mutex_unlock(&ec->lock);
-    
-    return ret;
-}
-
-/* 批量读取寄存器 */
-static int ec_read_block(struct ec_device *ec, u8 reg, u8 *buf, int len)
-{
-    int ret;
-    
-    mutex_lock(&ec->lock);
-    ret = regmap_bulk_read(ec->regmap, reg, buf, len);
-    mutex_unlock(&ec->lock);
-    
-    return ret;
-}
-
-/* 批量写入寄存器 */
-static int ec_write_block(struct ec_device *ec, u8 reg, const u8 *buf, int len)
-{
-    int ret;
-    
-    mutex_lock(&ec->lock);
-    ret = regmap_bulk_write(ec->regmap, reg, buf, len);
     mutex_unlock(&ec->lock);
     
     return ret;
@@ -320,6 +284,7 @@ static int read_power_status(struct ec_device *ec)
     int ret;
     
     ret = ec_read_reg(ec, EC_POWER_STATUS, &power_status);
+	//dev_info(&ec->client->dev, "EC_POWER_STATUS 0x%02X\n", power_status);
     if (ret)
         return ret;
         
@@ -410,7 +375,218 @@ static void battery_work_handler(struct work_struct *work)
     }
     
     /* 安排下一次刷新 */
-    schedule_delayed_work(&ec->battery_work, msecs_to_jiffies(5000));
+    schedule_delayed_work(&ec->battery_work, msecs_to_jiffies(1000));
+}
+
+/* 唤醒事件工作队列处理函数 - 在非原子上下文执行 */
+static void wakeup_work_handler(struct work_struct *work)
+{
+    struct wakeup_work_data *data = container_of(work, struct wakeup_work_data, work);
+    struct ec_device *ec = data->ec;
+    u8 qevent_data = data->qevent_data;
+    int ret;
+    
+    // 打印事件处理函数入口
+    //printk(KERN_INFO "wakeup_work_handler: QEvent data=0x%02X\n", qevent_data);
+    
+    // 读取Q事件数据寄存器（工作队列中执行）
+    ret = ec_read_reg(ec, EC_QEVENT_DATA, &qevent_data);
+    if (ret) {
+        dev_err(&ec->client->dev, "Failed to read EC_QEVENT_DATA in work queue: %d\n", ret);
+        return;
+    }
+    
+    dev_info(&ec->client->dev, "QEvent data processed: 0x%02X\n", qevent_data);
+    
+    // 处理不同类型的Q事件
+    switch (qevent_data) {
+        case QEVENT_POWER:
+            //dev_info(&ec->client->dev, "Power event detected, refreshing battery status\n");
+            // 立即触发电池状态刷新
+               /* 取消并等待当前延迟工作完成 */
+		    cancel_delayed_work_sync(&ec->battery_work);
+		    
+		    /* 立即提交工作执行 */
+		    schedule_work(&ec->battery_work.work);
+            break;
+            
+        case QEVENT_LID:
+            dev_info(&ec->client->dev, "Lid event detected, checking lid status\n");
+            handle_lid_event(ec);
+            break;
+            
+        default:
+            dev_info(&ec->client->dev, "Unhandled QEvent: 0x%02X\n", qevent_data);
+            break;
+    }
+}
+
+/* 唤醒事件处理函数 - 仅将工作添加到队列 */
+static void wakeup_event(struct input_handle *handle, unsigned int type,
+                       unsigned int code, int value)
+{
+    struct ec_device *ec = handle->private;  /* 从handle直接获取ec */
+    
+    // 打印事件处理函数入口
+    printk(KERN_INFO "Enter wakeup_event, type=%u, code=%u, value=%d\n", type, code, value);
+    
+    // 只处理按键按下事件
+    if (type == EV_KEY) {
+        printk(KERN_INFO "EV_KEY event detected, code=%u, value=%d\n", code, value);
+        
+        if (code == KEY_WAKEUP && value == 1) {
+            dev_info(&ec->client->dev, "KEY_WAKEUP event detected, queuing for processing\n");
+            
+            /* 将事件处理放入工作队列，确保在非原子上下文执行 */
+            ec->wakeup_work.ec = ec;
+            ec->wakeup_work.qevent_data = 0; // 工作队列中读取实际值
+            queue_work(ec->wakeup_wq, &ec->wakeup_work.work);
+        }
+    }
+}
+
+/* 处理盖子事件 */
+static void handle_lid_event(struct ec_device *ec)
+{
+    u8 lid_status;
+    int ret;
+    
+    // 读取盖子状态寄存器
+    ret = ec_read_reg(ec, EC_LID_STATUS, &lid_status);
+    if (ret) {
+        dev_err(&ec->client->dev, "Failed to read EC_LID_STATUS: %d\n", ret);
+        return;
+    }
+    
+    dev_info(&ec->client->dev, "Lid status: %s\n", 
+            lid_status == LID_CLOSED ? "closed" : "open");
+    
+    // 上报SW_LID事件
+    if (ec->input_dev) {
+        input_report_switch(ec->input_dev, SW_LID, lid_status == LID_CLOSED);
+        input_sync(ec->input_dev);
+        dev_info(&ec->client->dev, "SW_LID event reported: %s\n", 
+                lid_status == LID_CLOSED ? "closed" : "open");
+    }
+}
+
+/* 唤醒事件处理器连接回调 - 添加详细打印 */
+static int wakeup_connect(struct input_handler *handler, struct input_dev *dev,
+                         const struct input_device_id *id)
+{
+    // 添加编译时类型检查
+    BUILD_BUG_ON_MSG(!__same_type(*handler, ((struct ec_device *)0)->wakeup_handler),
+                     "wakeup_handler type mismatch");
+                     
+    struct input_handle *handle;
+    struct ec_device *ec = container_of(handler, struct ec_device, wakeup_handler);
+    
+    handle = devm_kzalloc(&ec->client->dev, sizeof(*handle), GFP_KERNEL);
+    if (!handle) {
+        dev_err(&ec->client->dev, "Failed to allocate input handle\n");
+        return -ENOMEM;
+    }
+    
+    handle->dev = dev;
+    handle->handler = handler;
+    handle->name = "ec-wakeup-handle";
+    handle->private = ec;  /* 存储ec指针到handle私有数据 */
+    
+    // 设置设备私有数据
+    input_set_drvdata(dev, ec);
+    
+    // 打印连接的设备信息
+    dev_info(&ec->client->dev, "Connected to input device: %s\n", dev->name);
+    printk(KERN_INFO "Device %s has EV_KEY: %d\n", dev->name, test_bit(EV_KEY, dev->evbit));
+    printk(KERN_INFO "Device %s has KEY_WAKEUP: %d\n", dev->name, test_bit(KEY_WAKEUP, dev->keybit));
+    
+    int ret = input_register_handle(handle);
+    if (ret) {
+        dev_err(&ec->client->dev, "Failed to register input handle: %d\n", ret);
+        devm_kfree(&ec->client->dev, handle);
+        return ret;
+    }
+    ret = input_open_device(handle);
+    if (ret) {
+        dev_err(&ec->client->dev, "Failed to open input device: %d\n", ret);
+        input_unregister_handle(handle);
+        kfree(handle);
+        return ret;
+    }
+    dev_info(&ec->client->dev, "Successfully connected to input device: %s\n", dev->name);
+    return 0;
+}
+
+/* 唤醒事件处理器断开回调 */
+static void wakeup_disconnect(struct input_handle *handle)
+{
+	input_close_device(handle);
+    input_unregister_handle(handle);
+    dev_info(&handle->dev->dev, "Disconnected from input device\n");
+}
+
+/* 唤醒事件处理器匹配表 */
+static const struct input_device_id wakeup_ids[] = {
+    {
+        .flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
+        .evbit = { BIT_MASK(EV_KEY) },
+        .keybit = { [BIT_WORD(KEY_WAKEUP)] = BIT_MASK(KEY_WAKEUP) },
+    },
+    { }, // 终止符
+};
+
+/* 初始化唤醒事件监听 - 添加详细打印 */
+static int init_wakeup_event_listener(struct ec_device *ec)
+{
+    // 直接初始化结构体成员，无需分配内存
+    ec->wakeup_handler.event = wakeup_event;
+    ec->wakeup_handler.connect = wakeup_connect;
+    ec->wakeup_handler.disconnect = wakeup_disconnect;
+    ec->wakeup_handler.name = "ec-wakeup-handler";
+    ec->wakeup_handler.id_table = wakeup_ids;
+    
+    int ret = input_register_handler(&ec->wakeup_handler);
+    if (ret) {
+        dev_err(&ec->client->dev, "Failed to register wakeup event handler: %d\n", ret);
+        return ret;
+    }
+    
+    dev_info(&ec->client->dev, "Wakeup event handler registered successfully\n");
+    return 0;
+}
+
+/* 初始化用于上报SW_LID事件的输入设备 - 添加打印 */
+static int init_lid_input_device(struct ec_device *ec)
+{
+    struct input_dev *input_dev;
+    int ret;
+    
+    // 分配输入设备
+    input_dev = devm_input_allocate_device(&ec->client->dev);
+    if (!input_dev) {
+        dev_err(&ec->client->dev, "Failed to allocate lid input device\n");
+        return -ENOMEM;
+    }
+    
+    // 设置设备属性
+    input_dev->name = "ec-lid-switch";
+    input_dev->phys = "ec-lid/input0";
+    input_dev->id.bustype = BUS_HOST;
+    
+    // 设置支持的事件类型和事件代码
+    __set_bit(EV_SW, input_dev->evbit);
+    __set_bit(SW_LID, input_dev->swbit);
+    
+    // 注册输入设备
+    ret = input_register_device(input_dev);
+    if (ret) {
+        dev_err(&ec->client->dev, "Failed to register lid input device: %d\n", ret);
+        return ret;
+    }
+    
+    ec->input_dev = input_dev;
+    dev_info(&ec->client->dev, "Lid input device registered successfully: %s\n", input_dev->name);
+    return 0;
 }
 
 /* 电池属性获取回调函数 */
@@ -422,7 +598,7 @@ static int battery_get_property(struct power_supply *psy,
     int ret = 0;
     
     if (!ec->battery_enabled)
-        return -ENODEV;
+        return -ENOMEM;
         
     switch (psp) {
         case POWER_SUPPLY_PROP_CAPACITY:
@@ -562,6 +738,10 @@ static SIMPLE_DEV_PM_OPS(ec_pm_ops, ec_suspend, ec_resume);
 
 static void TH1520_syscore_shutdown(void)
 {
+    struct i2c_client *client = ec->client;  /* 通过全局ec获取client */
+    struct device *dev = &client->dev;
+    struct ec_device *ec = dev_get_drvdata(dev);  /* 从设备数据获取ec */
+    
     int ret = 0;
     u8 val = 0;
     
@@ -593,12 +773,12 @@ static struct syscore_ops TH1520_syscore_ops = {
     .shutdown = TH1520_syscore_shutdown,
 };
 
+/* EC设备探测函数 */
 static int ec_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
 {
     struct regmap_config config;
     uint8_t ec_main_version = 0;
     uint8_t ec_sub_version = 0;
-    uint8_t read_back = 0;
     int ret;
     
     /* 分配并初始化设备结构 */
@@ -609,6 +789,17 @@ static int ec_probe(struct i2c_client *client, const struct i2c_device_id *dev_i
     ec->client = client;
     mutex_init(&ec->lock);
     i2c_set_clientdata(client, ec);
+
+    /* 创建工作队列 */
+    ec->wakeup_wq = create_singlethread_workqueue("ec_wakeup_wq");
+    if (!ec->wakeup_wq) {
+        dev_err(&client->dev, "Failed to create wakeup workqueue\n");
+        kfree(ec);
+        return -ENOMEM;
+    }
+    
+    /* 初始化工作项 */
+    INIT_WORK(&ec->wakeup_work.work, wakeup_work_handler);
 
     /* 配置regmap */
     config = (struct regmap_config) {
@@ -633,31 +824,32 @@ static int ec_probe(struct i2c_client *client, const struct i2c_device_id *dev_i
     ec->regmap = devm_regmap_init_i2c(client, &config);
     if (IS_ERR(ec->regmap)) {
         dev_err(&client->dev, "Failed to initialize regmap\n");
+        destroy_workqueue(ec->wakeup_wq);
+        kfree(ec);
         return PTR_ERR(ec->regmap);
     }
     
     ec_read_reg(ec, 0x00, &ec_main_version);
     ec_read_reg(ec, 0x01, &ec_sub_version);
-    printk(KERN_INFO "EC main read reagmap  version=0x%x, EC sub_version=0x%x\n", 
+    printk(KERN_INFO "EC main read regmap version=0x%x, EC sub_version=0x%x\n", 
                ec_main_version, ec_sub_version);
                
     dev_info(&client->dev, "EC device registered at 0x%02X\n", 
              client->addr);
 
-    // Read EC version
-    ec_main_version = ec_i2c_read(client, 0x00);
-    ec_sub_version = ec_i2c_read(client, 0x01);
-    printk(KERN_INFO "EC main version=0x%x, EC sub_version=0x%x\n", 
-           ec_main_version, ec_sub_version);
-
-    // Write 0x55 to EC SRAM reg 0xaa
-    if (ec_i2c_write(client, 0xaa, 0x55) != 0) {
-        printk(KERN_ERR "Failed to write to EC register 0xaa\n");
-        return -EIO;
+    /* 初始化唤醒事件监听 */
+    ret = init_wakeup_event_listener(ec);
+    if (ret) {
+        dev_err(&client->dev, "Failed to initialize wakeup event listener: %d\n", ret);
+        // 可以选择继续执行，不影响主要功能
     }
-
-    read_back = ec_i2c_read(client, 0xaa);
-    printk(KERN_INFO "0xaa=0x%x\n", read_back);
+    
+    /* 初始化盖子状态输入设备 */
+    ret = init_lid_input_device(ec);
+    if (ret) {
+        dev_err(&client->dev, "Failed to initialize lid input device: %d\n", ret);
+        // 可以选择继续执行，不影响主要功能
+    }
     
     /* 初始化电池功能 */
     ec->battery_enabled = true;
@@ -693,6 +885,7 @@ static int ec_probe(struct i2c_client *client, const struct i2c_device_id *dev_i
     return 0;
 }
 
+/* EC设备移除函数 */
 static int ec_remove(struct i2c_client *client)
 {
     struct ec_device *ec = i2c_get_clientdata(client);
@@ -700,9 +893,24 @@ static int ec_remove(struct i2c_client *client)
     /* 取消电池数据刷新工作 */
     cancel_delayed_work_sync(&ec->battery_work);
     
+    /* 释放唤醒事件处理器 */
+    input_unregister_handler(&ec->wakeup_handler);  /* 直接注销，无需判断 */
+    
+    /* 释放盖子状态输入设备 */
+    if (ec->input_dev) {
+        input_unregister_device(ec->input_dev);
+        ec->input_dev = NULL;
+    }
+    
     /* 注销电池电源供应器 */
     if (ec->battery_psy)
         power_supply_unregister(ec->battery_psy);
+    
+    /* 销毁工作队列 */
+    if (ec->wakeup_wq) {
+        flush_workqueue(ec->wakeup_wq);
+        destroy_workqueue(ec->wakeup_wq);
+    }
     
     dev_info(&client->dev, "EC device removed\n");
     return 0;
@@ -727,4 +935,4 @@ module_i2c_driver(ec_driver);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("huangxionglue");
-MODULE_DESCRIPTION("EC I2C Driver with Battery Monitoring");
+MODULE_DESCRIPTION("EC I2C Driver with Battery Monitoring and Event Handling");
