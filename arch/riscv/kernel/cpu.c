@@ -135,6 +135,10 @@ static int c_show(struct seq_file *m, void *v)
 	if (!of_property_read_string(node, "cpu-vector", &vecver))
 		seq_printf(m, "cpu-vector\t: %s\n", vecver);
 
+
+	seq_printf(m, "model\t\t: T1\n");
+	seq_printf(m, "model name\t: ZH T1\n");
+
 	seq_puts(m, "\n");
 	of_node_put(node);
 
