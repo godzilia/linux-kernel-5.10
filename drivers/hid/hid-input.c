@@ -1345,10 +1345,10 @@ void hidinput_hid_event(struct hid_device *hid, struct hid_field *field, struct 
 		switch (usage->code)
 		{
 			case KEY_F13:
-				usage->code = KEY_TOUCHPAD_TOGGLE;
+//				usage->code = KEY_TOUCHPAD_TOGGLE;
 				break;
 			case KEY_F14:
-				usage->code = KEY_ASSISTANT;
+//				usage->code = KEY_ASSISTANT;
 				break;
 		}
 	}
