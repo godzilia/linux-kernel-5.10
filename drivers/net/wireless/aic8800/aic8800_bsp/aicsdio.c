@@ -263,6 +263,8 @@ void *aicbsp_get_drvdata(void *args)
 }
 
 
+static struct mmc_host *rwnx_mmc_host = NULL;
+
 static int aicbsp_sdio_probe(struct sdio_func *func,
 	const struct sdio_device_id *id)
 {
@@ -270,7 +272,7 @@ static int aicbsp_sdio_probe(struct sdio_func *func,
 	struct aic_sdio_dev *sdiodev;
 	struct aicwf_bus *bus_if;
 	int err = -ENODEV;
-
+	printk("%s enter",__func__);
 	if (func == NULL) {
 		sdio_err("%s func is null\n", __func__);
 		return err;
@@ -297,7 +299,8 @@ static int aicbsp_sdio_probe(struct sdio_func *func,
 
 	host = func->card->host;
 	host->caps |= MMC_CAP_NONREMOVABLE;
-
+	printk("%s,%s\n",__func__,mmc_hostname(host));
+	rwnx_mmc_host = host;
 	func = func->card->sdio_func[1 - 1]; //replace 2 with 1
 
 	sdio_dbg("%s after replace:%d\n", __func__, func->num);
@@ -508,7 +511,8 @@ static int aicbsp_platform_power_on(void)
             mdelay(50);
             rockchip_wifi_set_carddetect(1);
 #endif /*CONFIG_PLATFORM_ROCKCHIP2*/
-
+	if(rwnx_mmc_host!=NULL)
+		mmc_detect_change(rwnx_mmc_host,1);
 	sema_init(&aic_chipup_sem, 0);
 	ret = aicbsp_reg_sdio_notify(&aic_chipup_sem);
 	if (ret) {

@@ -66,6 +66,12 @@
 #endif
 #include "aic_priv_cmd.h"
 
+#include <linux/of_device.h>  // 尝试包含此头文件
+		
+		// 如果上述头文件不包含该函数，尝试包含
+#include <linux/of_platform.h>
+
+
 #define RW_DRV_DESCRIPTION  "RivieraWaves 11nac driver for Linux cfg80211"
 #define RW_DRV_COPYRIGHT    "Copyright(c) 2015-2017 RivieraWaves"
 #define RW_DRV_AUTHOR       "RivieraWaves S.A.S"
@@ -6002,6 +6008,8 @@ static int __init rwnx_mod_init(void)
 	rwnx_print_version();
     rwnx_init_cmd_array();
 
+
+
 	wifi_node = of_find_compatible_node(NULL, NULL, "zhihe,aic8800");
     if (!wifi_node) {
         pr_err("WiFi device tree node not found\n");
@@ -6031,7 +6039,19 @@ static int __init rwnx_mod_init(void)
 		of_node_put(wifi_node);
 		return ret;
 	}
-	k = 10;
+	
+	if (aicbsp_set_subsys(AIC_WIFI, AIC_PWR_ON) < 0) {
+		AICWFDBG(LOGERROR, "%s, set power on fail!\n", __func__);
+		if(!aicbsp_get_load_fw_in_fdrv()){
+			k = 3;
+		} else {
+			pr_info("aicbsp_get_load_fw_in_fdrv success k= %d\n", k);
+			k = 0;
+		}
+	} else {
+		pr_info("aicbsp_set_subsys success k= %d\n", k);
+		k = 0;
+	}
 	while(k--) {
 		/* 5. 可选：执行复位序列 */
 		if (flags & OF_GPIO_ACTIVE_LOW) {
@@ -6043,7 +6063,9 @@ static int __init rwnx_mod_init(void)
 			msleep(100); 				  /* 延时 */
 			gpio_set_value(gpio_num, 0);  /* 释放复位 */
 		}
+		
 		msleep(3000);
+		
 		if (aicbsp_set_subsys(AIC_WIFI, AIC_PWR_ON) < 0) {
 			AICWFDBG(LOGERROR, "%s, set power on fail!\n", __func__);
 			if(!aicbsp_get_load_fw_in_fdrv()){
@@ -6056,6 +6078,7 @@ static int __init rwnx_mod_init(void)
 			pr_info("aicbsp_set_subsys success k= %d\n", k);
 			break;
 		}
+
 		msleep(10*1000);
 	}
 	if(k==0) {
