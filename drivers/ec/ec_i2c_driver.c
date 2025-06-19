@@ -676,7 +676,7 @@ static enum power_supply_property battery_props[] = {
 
 /* 电池电源供应器描述 */
 static const struct power_supply_desc battery_desc = {
-    .name = "ec-battery",
+    .name = "BAT0",
     .type = POWER_SUPPLY_TYPE_BATTERY,
     .properties = battery_props,
     .num_properties = ARRAY_SIZE(battery_props),
