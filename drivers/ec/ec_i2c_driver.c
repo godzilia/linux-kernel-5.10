@@ -148,7 +148,7 @@ static void wakeup_work_handler(struct work_struct *work);
 static bool ec_reg_volatile(struct device *dev, unsigned int reg)
 {
     /* 某些寄存器可能是易变的，例如状态寄存器 */
-    if (reg == EC_SOC_ACPI_STATUS || reg == EC_POWER_STATUS || reg == EC_QEVENT_DATA)
+    if (reg == EC_SOC_ACPI_STATUS || reg == EC_POWER_STATUS || reg == EC_QEVENT_DATA || reg == EC_LID_STATUS)
         return true;
     return false;
 }
@@ -373,7 +373,6 @@ static void battery_work_handler(struct work_struct *work)
         /* 通知电源供应器子系统数据已更新 */
         power_supply_changed(ec->battery_psy);
     }
-    
     /* 安排下一次刷新 */
     schedule_delayed_work(&ec->battery_work, msecs_to_jiffies(1000));
 }
