@@ -1032,6 +1032,13 @@
 					FM_GPIO1_30	0x0	0x208
 				>;
 			};
+
+			pinctrl_edp: edpgrp {
+				thead,pins = <	
+					FM_GPIO1_16	0x0	0x208	
+					FM_GPIO1_21	0x3	0x208	
+				>;
+			};
 	};
 };
 
@@ -1387,10 +1394,13 @@
 		compatible = "lt9711,kd140n26";
 		reg = <0>;
 		backlight = <&lcd0_backlight>;
+		edp1v2-gpio = <&gpio1_porta 16 0>;
+		edp1v8-gpio = <&gpio1_porta 21 0>;
 		enable-gpio = <&gpio2_porta 21 0>; /* active high */
 		reset-gpio = <&gpio1_porta 22 1>; /* active low */
 		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_lt9711>;
+		pinctrl-0 = <&pinctrl_lt9711>,
+					<&pinctrl_edp>;
 
 		port {
 				panel0_in: endpoint {

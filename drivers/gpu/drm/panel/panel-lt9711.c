@@ -41,6 +41,9 @@ struct panel_info {
 
 	struct gpio_desc	*enable;
 	struct gpio_desc	*reset;
+
+	struct gpio_desc	*edp_1v2;
+	struct gpio_desc	*edp_1v8;
 	//struct regulator	*hsvcc;
 	//struct regulator	*vspn3v3;
 
@@ -260,6 +263,17 @@ static int lt9711_panel_add(struct panel_info *pinfo)
 {
 	struct device *dev = &pinfo->link->dev;
 	int ret;
+
+
+	pinfo->edp_1v2 = devm_gpiod_get(dev, "edp1v2", GPIOD_OUT_HIGH);
+	if (IS_ERR(pinfo->edp_1v2))
+		return dev_err_probe(dev, PTR_ERR(pinfo->edp_1v2),
+				"Couldn't get our enable GPIO\n");
+	
+	pinfo->edp_1v8 = devm_gpiod_get(dev, "edp1v8", GPIOD_OUT_HIGH);
+	if (IS_ERR(pinfo->edp_1v8))
+		return dev_err_probe(dev, PTR_ERR(pinfo->edp_1v8),
+				"Couldn't get our enable GPIO\n");
 
 	pinfo->enable = devm_gpiod_get(dev, "enable", GPIOD_OUT_HIGH);
 	if (IS_ERR(pinfo->enable))
