@@ -638,7 +638,6 @@ static int es8326_set_bias_level(struct snd_soc_component *codec,
 	int ret;
 
 	return ret;
-
 	switch (level) {
 	case SND_SOC_BIAS_ON:
 		// ret = clk_prepare_enable(es8326->mclk);
@@ -1094,6 +1093,7 @@ static int es8326_resume(struct snd_soc_component *component)
 	es8326->hpl_vol = 0x03;
 	es8326->hpr_vol = 0x03;
 
+	enable_irq(es8326->irq);
 	es8326_irq(es8326->irq, es8326);
 	return 0;
 }
@@ -1117,6 +1117,7 @@ static int es8326_suspend(struct snd_soc_component *component)
 	regmap_write(es8326->regmap, ES8326_CSM_I2C_STA, 0x00);
 
 	regcache_mark_dirty(es8326->regmap);
+	disable_irq(es8326->irq);
 	return 0;
 }
 
@@ -1234,6 +1235,8 @@ static const struct snd_soc_component_driver soc_component_dev_es8326 = {
 	.num_dapm_routes	= ARRAY_SIZE(es8326_dapm_routes),
 	.controls		= es8326_snd_controls,
 	.num_controls		= ARRAY_SIZE(es8326_snd_controls),
+	.suspend_bias_off	= 1,
+	.idle_bias_on		= 1,
 	.use_pmdown_time	= 1,
 	.endianness		= 1,
 };
