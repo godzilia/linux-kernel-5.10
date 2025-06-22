@@ -299,7 +299,23 @@
 		status = "okay";
     };
        
-
+	vi_camera_en: vi_camera_en {
+		compatible = "regulator-fixed";
+		regulator-name = "vi_camera_en1";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_cam_en>;
+		gpios = <&gpio2_porta 18 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
+	
+	tp_vdd_en: tp_vdd_en_0 {
+		compatible = "regulator-fixed";
+		regulator-name = "tp_vdd_en1";
+		pinctrl-names = "default";
+		pinctrl-0 = <&tp_vdd_pins>;
+		gpios = <&ao_gpio_porta 13 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+	};
 
 	vi_camera_en: vi_camera_en {
 		compatible = "regulator-fixed";
@@ -1052,6 +1068,9 @@
 			qevent_irq_pins: qevent_irq-0 {
 				thead,pins = <FM_AOGPIO_12 0x0 0x208>;
 			};
+			tp_vdd_pins: tp_vdd_0 {
+				thead,pins = <FM_AOGPIO_13 0x0 0x208>;
+			};
 			
 			pinctrl_audiopa1: audiopa1_grp {
 				thead,pins = <
@@ -1189,6 +1208,7 @@
 		post-power-on-delay-ms = <100>;
 		hid-support-wakeup;
 		wakeup-source;
+		vdd-supply = <&tp_vdd_en>;
 	};
 };
 
