@@ -153,7 +153,14 @@ static int dip_switch_gpio_probe(struct platform_device *pdev)
     struct device_node *np = dev->of_node;
     struct device_node *power_np = NULL;
     const char *power_name = NULL;
+	const char *soc_version;
     int ret;
+	ret = of_property_read_string(pdev->dev.of_node, "soc_version", &soc_version);
+	if (ret) {
+	   dev_err(&pdev->dev, "无法读取soc_version属性\n");
+	   return ret;
+	} else 
+		printk("%s",soc_version);
 
     /* 分配并初始化驱动数据结构 */
     data = devm_kzalloc(dev, sizeof(*data), GFP_KERNEL);
