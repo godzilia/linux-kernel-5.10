@@ -148,7 +148,24 @@ static void wakeup_work_handler(struct work_struct *work);
 static bool ec_reg_volatile(struct device *dev, unsigned int reg)
 {
     /* 某些寄存器可能是易变的，例如状态寄存器 */
-    if (reg == EC_SOC_ACPI_STATUS || reg == EC_POWER_STATUS || reg == EC_QEVENT_DATA || reg == EC_LID_STATUS)
+    if (reg == EC_SOC_ACPI_STATUS 
+	 || reg == EC_POWER_STATUS 
+	 || reg == EC_QEVENT_DATA 
+	 || reg == EC_LID_STATUS
+	 || reg == EC_BAT_REMAIN_PERCENT
+	 || reg == EC_BAT_REMAIN_CAPACITY_L
+	 || reg == EC_BAT_REMAIN_CAPACITY_H
+	 || reg == EC_BAT_DESIGN_CAPACITY_L
+	 || reg == EC_BAT_DESIGN_CAPACITY_H
+	 || reg == EC_BAT_PRESENT_VOLTAGE_L
+	 || reg == EC_BAT_PRESENT_VOLTAGE_H
+	 || reg == EC_BAT_DESIGN_VOLTAGE_L
+	 || reg == EC_BAT_DESIGN_VOLTAGE_H
+	 || reg == EC_BAT_PRESENT_CURRENT_L
+	 || reg == EC_BAT_PRESENT_CURRENT_H
+	 || reg == EC_BAT_FULL_CHARGE_CAPACITY_L
+	 || reg == EC_BAT_FULL_CHARGE_CAPACITY_H
+	 )
         return true;
     return false;
 }
