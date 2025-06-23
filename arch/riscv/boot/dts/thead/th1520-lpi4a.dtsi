@@ -297,6 +297,7 @@
 		interrupt-parent = <&gpio1_porta>;
 		interrupts = <26 2>;
 		status = "okay";
+		soc_version="CLOUD_BOOK_SOC_VERSION 1.0";
     };
        
 	vi_camera_en: vi_camera_en {
