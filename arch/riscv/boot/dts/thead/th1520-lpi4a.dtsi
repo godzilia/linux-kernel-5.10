@@ -1204,7 +1204,7 @@
 		compatible = "hid-over-i2c";
 		reg = <0x2c>;
 		hid-descr-addr = <0x20>;
-		rst = <&gpio1_porta 7 GPIO_ACTIVE_LOW>;
+		//rst = <&gpio1_porta 7 GPIO_ACTIVE_LOW>;
 		post-power-on-delay-ms = <100>;
 		hid-support-wakeup;
 		wakeup-source;
