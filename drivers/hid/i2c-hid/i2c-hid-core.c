@@ -246,9 +246,7 @@ static int __i2c_hid_command(struct i2c_client *client,
 
 	memcpy(cmd->data + length, args, args_len);
 	length += args_len;
-	printk("hxl,%s,length=%d",__func__,length);
-	if(length>=6)
-		printk("hxl,%s,%x,%x,%x,%x,%x,%x",__func__,cmd->data[0],cmd->data[1],cmd->data[2],cmd->data[3],cmd->data[4],cmd->data[5]);
+
 	i2c_hid_dbg(ihid, "%s: cmd=%*ph\n", __func__, length, cmd->data);
 
 	msg[0].addr = client->addr;
