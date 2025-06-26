@@ -597,10 +597,11 @@ static void hidinput_configure_usage(struct hid_input *hidinput, struct hid_fiel
 
 	case HID_UP_KEYBOARD:
 		set_bit(EV_REP, input->evbit);
-
 		if ((usage->hid & HID_USAGE) < 256) {
-			if (!hid_keyboard[usage->hid & HID_USAGE]) goto ignore;
-			map_key_clear(hid_keyboard[usage->hid & HID_USAGE]);
+			if((usage->hid & HID_USAGE) == 0xc7) {
+				map_key_clear(KEY_TOUCHPAD_TOGGLE);
+			} else if (!hid_keyboard[usage->hid & HID_USAGE]) goto ignore;
+			else map_key_clear(hid_keyboard[usage->hid & HID_USAGE]);
 		} else
 			map_key(KEY_UNKNOWN);
 
