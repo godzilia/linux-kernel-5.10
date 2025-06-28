@@ -402,6 +402,26 @@
 			regulator-always-on;
 		};
 
+		soc_hub3_en_reg: soc_hub3_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_hub3_en";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			gpio = <&gpio1_porta 9 1>;
+			enable-active-high;
+			regulator-always-on;
+		};
+
+		soc_hub2_en_reg: soc_hub2_en {
+			compatible = "regulator-fixed";
+			regulator-name = "soc_hub2_en";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			gpio = <&gpio1_porta 27 1>;
+			enable-active-high;
+			regulator-always-on;
+		};
+
 		dvdd_cpu_reg: appcpu_dvdd {
 			compatible = "thead,light-dialog-pmic";
 			regulator-name = "appcpu_dvdd";
@@ -1505,6 +1525,8 @@
 
 &usb_1 {
 	hubswitch-gpio = <&gpio1_porta 28 GPIO_ACTIVE_LOW>;
+	hub2-supply = <&soc_hub2_en_reg>;
+	hub3-supply = <&soc_hub3_en_reg>;
 	//vbus-supply = <&soc_vbus_en_reg>;
 	//hub1v2-supply = <&reg_usb_hub_vdd1v2>;
 	//hub5v-supply = <&reg_usb_hub_vcc5v>;
