@@ -450,7 +450,7 @@ static void wakeup_event(struct input_handle *handle, unsigned int type,
     if (type == EV_KEY) {
         printk(KERN_INFO "EV_KEY event detected, code=%u, value=%d\n", code, value);
         
-        if (code == KEY_WAKEUP && value == 1) {
+        if (code == KEY_QEVENT && value == 1) {
             dev_info(&ec->client->dev, "KEY_WAKEUP event detected, queuing for processing\n");
             
             /* 将事件处理放入工作队列，确保在非原子上下文执行 */
@@ -546,7 +546,7 @@ static const struct input_device_id wakeup_ids[] = {
     {
         .flags = INPUT_DEVICE_ID_MATCH_EVBIT | INPUT_DEVICE_ID_MATCH_KEYBIT,
         .evbit = { BIT_MASK(EV_KEY) },
-        .keybit = { [BIT_WORD(KEY_WAKEUP)] = BIT_MASK(KEY_WAKEUP) },
+        .keybit = { [BIT_WORD(KEY_QEVENT)] = BIT_MASK(KEY_QEVENT) },
     },
     { }, // 终止符
 };
