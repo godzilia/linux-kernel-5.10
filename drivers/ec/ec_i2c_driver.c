@@ -33,9 +33,12 @@
 /* 新增寄存器定义 */
 #define EC_QEVENT_DATA                 (0x10)    /* Q事件数据寄存器 */
 #define EC_LID_STATUS                  (0x06)    /* 盖子状态寄存器 */
+#define EC_ONKEY_STATUS                (0x03)    /* 盖子状态寄存器 */
+
 
 /* 新增事件类型定义 */
 #define QEVENT_POWER                   (0xB4)    /* 电源事件 */
+#define QEVENT_ONKEY                   (0xB5)    /* 开机键事件 */
 #define QEVENT_LID                     (0xD0)    /* 盖子事件 */
 
 enum e_soc_acpi_status {
@@ -137,6 +140,8 @@ struct ec_device *ec;
 
 /* 函数前向声明 */
 static void handle_lid_event(struct ec_device *ec);
+static void handle_onkey_event(struct ec_device *ec);
+
 static void wakeup_event(struct input_handle *handle, unsigned int type,
                        unsigned int code, int value);
 static int wakeup_connect(struct input_handler *handler, struct input_dev *dev,
@@ -152,6 +157,7 @@ static bool ec_reg_volatile(struct device *dev, unsigned int reg)
 	 || reg == EC_POWER_STATUS 
 	 || reg == EC_QEVENT_DATA 
 	 || reg == EC_LID_STATUS
+	 || reg == EC_ONKEY_STATUS
 	 || reg == EC_BAT_REMAIN_PERCENT
 	 || reg == EC_BAT_REMAIN_CAPACITY_L
 	 || reg == EC_BAT_REMAIN_CAPACITY_H
@@ -430,7 +436,12 @@ static void wakeup_work_handler(struct work_struct *work)
             dev_info(&ec->client->dev, "Lid event detected, checking lid status\n");
             handle_lid_event(ec);
             break;
-            
+			
+		case QEVENT_ONKEY:
+            dev_info(&ec->client->dev, "QEVENT_ONKEY event\n");
+			handle_onkey_event(ec);
+            break;
+			
         default:
             dev_info(&ec->client->dev, "Unhandled QEvent: 0x%02X\n", qevent_data);
             break;
@@ -483,6 +494,25 @@ static void handle_lid_event(struct ec_device *ec)
         input_sync(ec->input_dev);
         dev_info(&ec->client->dev, "SW_LID event reported: %s\n", 
                 lid_status == LID_CLOSED ? "closed" : "open");
+    }
+}
+/* 处理盖子事件 */
+static void handle_onkey_event(struct ec_device *ec)
+{
+    u8 onkey_status;
+    int ret;
+    
+    // 读取盖子状态寄存器
+    ret = ec_read_reg(ec, EC_ONKEY_STATUS, &onkey_status);
+    if (ret) {
+        dev_err(&ec->client->dev, "Failed to read EC_ONKEY_STATUS: %d\n", ret);
+        return;
+    }
+    if (ec->input_dev) {
+        input_event(ec->input_dev, EV_KEY, KEY_POWER,onkey_status);
+        input_sync(ec->input_dev);
+        dev_info(&ec->client->dev, "EV_KEY event reported: %s\n", 
+                onkey_status == 1 ? "down" : "up");
     }
 }
 
@@ -592,6 +622,8 @@ static int init_lid_input_device(struct ec_device *ec)
     // 设置支持的事件类型和事件代码
     __set_bit(EV_SW, input_dev->evbit);
     __set_bit(SW_LID, input_dev->swbit);
+	set_bit(EV_KEY, input_dev->evbit);
+    set_bit(KEY_POWER, input_dev->keybit);
     
     // 注册输入设备
     ret = input_register_device(input_dev);
