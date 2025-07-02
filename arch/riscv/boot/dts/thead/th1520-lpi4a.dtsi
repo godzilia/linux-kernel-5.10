@@ -297,7 +297,7 @@
 		interrupt-parent = <&gpio1_porta>;
 		interrupts = <26 2>;
 		status = "okay";
-		soc_version="CLOUD_BOOK_SOC_VERSION 1.4";
+		soc_version="CLOUD_BOOK_SOC_VERSION 1.5";
     };
        
 	vi_camera_en: vi_camera_en {
@@ -1225,7 +1225,7 @@
 		compatible = "hid-over-i2c";
 		reg = <0x2c>;
 		hid-descr-addr = <0x20>;
-		//rst = <&gpio1_porta 7 GPIO_ACTIVE_LOW>;
+		rst = <&gpio1_porta 7 GPIO_ACTIVE_LOW>;
 		post-power-on-delay-ms = <100>;
 		hid-support-wakeup;
 		wakeup-source;
