@@ -1158,6 +1158,7 @@ static int i2c_hid_probe(struct i2c_client *client,
 			gpio_free(gpio_num);
 			return ret;
 		}
+		ret = i2c_hid_fetch_hid_descriptor(ihid);
 		k = 10;
 		while(k--) {
 			/* 5. 可选：执行复位序列 */
@@ -1309,6 +1310,9 @@ static int i2c_hid_resume(struct device *dev)
 	struct i2c_hid *ihid = i2c_get_clientdata(client);
 	struct hid_device *hid = ihid->hid;
 	int wake_status;
+	uint32_t k = 0;
+	int gpio_num = 0;
+    enum of_gpio_flags flags;	
 
 	if (!device_may_wakeup(&client->dev)) {
 		ret = regulator_bulk_enable(ARRAY_SIZE(ihid->pdata.supplies),
@@ -1337,10 +1341,65 @@ static int i2c_hid_resume(struct device *dev)
 	 * However some ALPS touchpads generate IRQ storm without reset, so
 	 * let's still reset them here.
 	 */
-	if (ihid->quirks & I2C_HID_QUIRK_RESET_ON_RESUME)
-		ret = i2c_hid_hwreset(client);
-	else
-		ret = i2c_hid_set_power(client, I2C_HID_PWR_ON);
+	gpio_num = of_get_named_gpio_flags(client->dev.of_node, "rst", 0, &flags);
+	if (gpio_num < 0) {
+		dev_info(&client->dev,"Failed to get RST GPIO: %d\n", gpio_num);
+		
+		if (ihid->quirks & I2C_HID_QUIRK_RESET_ON_RESUME)
+			ret = i2c_hid_hwreset(client);
+		else
+			ret = i2c_hid_set_power(client, I2C_HID_PWR_ON);
+		
+	} else {
+		dev_info(&client->dev,"i2c_hid get RST gpio_num: %d\n", gpio_num);
+	
+		if (flags & OF_GPIO_ACTIVE_LOW) {
+			ret = gpio_direction_output(gpio_num, 1);  /* 初始高电平（低有效） */
+			dev_info(&client->dev,"RST GPIO is active low\n");
+		} else {
+			ret = gpio_direction_output(gpio_num, 0);  /* 初始低电平（高有效） */
+			dev_info(&client->dev,"RST GPIO is active high\n");
+		}
+		
+		if (ret) {
+			dev_info(&client->dev,"Failed to set RST GPIO direction: %d\n", ret);
+			gpio_free(gpio_num);
+			return ret;
+		}
+		if (ihid->quirks & I2C_HID_QUIRK_RESET_ON_RESUME)
+			ret = i2c_hid_hwreset(client);
+		else
+			ret = i2c_hid_set_power(client, I2C_HID_PWR_ON);
+		if(ret)
+			k = 10;
+		else 
+			k = 0;
+		while(k--) {
+			/* 5. 可选：执行复位序列 */
+			if (flags & OF_GPIO_ACTIVE_LOW) {
+				gpio_set_value(gpio_num, 0);  /* 拉低复位 */
+				msleep(100);				  /* 延时 */
+				gpio_set_value(gpio_num, 1);  /* 释放复位 */
+			} else {
+				gpio_set_value(gpio_num, 1);  /* 拉高复位 */
+				msleep(100);				  /* 延时 */
+				gpio_set_value(gpio_num, 0);  /* 释放复位 */
+			}
+			msleep(1000);
+			if (ihid->quirks & I2C_HID_QUIRK_RESET_ON_RESUME)
+				ret = i2c_hid_hwreset(client);
+			else
+				ret = i2c_hid_set_power(client, I2C_HID_PWR_ON);
+			if (ret) {
+				dev_info(&client->dev,"i2c_hid_fetch_hid_resume error k= %d\n", k);
+			} else {
+				dev_info(&client->dev,"i2c_hid_fetch_hid_resume success k= %d\n", k);
+				break;
+			}
+			msleep(1000);
+		}
+		gpio_free(gpio_num);
+	}
 
 	if (ret)
 		return ret;
