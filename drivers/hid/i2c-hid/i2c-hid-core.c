@@ -1094,13 +1094,17 @@ static int i2c_hid_probe(struct i2c_client *client,
 	ret = devm_regulator_bulk_get(&client->dev,
 				      ARRAY_SIZE(ihid->pdata.supplies),
 				      ihid->pdata.supplies);
-	if (ret)
+	if (ret) {
+		dev_info(&client->dev,"%s,%s,%d,ret = %d\n",__func__,__FILE__,__LINE__,ret);
 		return ret;
+	}
 
 	ret = regulator_bulk_enable(ARRAY_SIZE(ihid->pdata.supplies),
 				    ihid->pdata.supplies);
-	if (ret < 0)
+	if (ret < 0) {
+		dev_info(&client->dev,"%s,%s,%d,ret = %d\n",__func__,__FILE__,__LINE__,ret);
 		return ret;
+	}
 
 	if (ihid->pdata.post_power_delay_ms)
 		msleep(ihid->pdata.post_power_delay_ms);
@@ -1119,19 +1123,21 @@ static int i2c_hid_probe(struct i2c_client *client,
 	 * size of the reports. Let's use HID_MIN_BUFFER_SIZE, then we do the
 	 * real computation later. */
 	ret = i2c_hid_alloc_buffers(ihid, HID_MIN_BUFFER_SIZE);
-	if (ret < 0)
+	if (ret < 0) {
+		dev_info(&client->dev,"%s,%s,%d,ret = %d\n",__func__,__FILE__,__LINE__,ret);
 		goto err_regulator;
+	}
 
 	i2c_hid_acpi_fix_up_power(&client->dev);
 
 	i2c_hid_acpi_enable_wakeup(&client->dev);
 
 	device_enable_async_suspend(&client->dev);
-
+	
 	/* Make sure there is something at this address */
 	ret = i2c_smbus_read_byte(client);
 	if (ret < 0) {
-		dev_dbg(&client->dev, "nothing at this address: %d\n", ret);
+		dev_err(&client->dev, "nothing at this address: %d\n", ret);
 		ret = -ENXIO;
 		goto err_regulator;
 	}
@@ -1159,7 +1165,11 @@ static int i2c_hid_probe(struct i2c_client *client,
 			return ret;
 		}
 		ret = i2c_hid_fetch_hid_descriptor(ihid);
-		k = 10;
+		if (ret < 0) {
+			k = 10;
+		} else {
+			k = 0;
+		}
 		while(k--) {
 			/* 5. 可选：执行复位序列 */
 			if (flags & OF_GPIO_ACTIVE_LOW) {
