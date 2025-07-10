@@ -7,9 +7,11 @@
 #include <linux/mutex.h>
 #include <linux/input.h>
 #include <linux/workqueue.h>
+#include <linux/thermal.h>
+
 
 #define EC_REG_START   					 (EC_MAIN_VERSION)   				 /* 起始寄存器地址 */
-#define EC_REG_END     					 (EC_BAT_FULL_CHARGE_CAPACITY_H)     /* 结束寄存器地址 */
+#define EC_REG_END     					 (EC_TEMP)     						 /* 结束寄存器地址 */
 #define EC_MAX_RETRIES 					 (3)      							 /* 操作重试次数 */
 
 #define EC_MAIN_VERSION  				 (0x00)								 
@@ -29,6 +31,9 @@
 #define EC_BAT_PRESENT_CURRENT_H		 (0x2B)
 #define EC_BAT_FULL_CHARGE_CAPACITY_L	 (0x2C)
 #define EC_BAT_FULL_CHARGE_CAPACITY_H	 (0x2D)
+
+
+#define EC_TEMP							 (0x30)
 
 /* 新增寄存器定义 */
 #define EC_QEVENT_DATA                 (0x10)    /* Q事件数据寄存器 */
@@ -134,6 +139,7 @@ struct ec_device {
     /* 工作队列相关 */
     struct workqueue_struct *wakeup_wq;
     struct wakeup_work_data wakeup_work;
+	struct thermal_zone_device *tz;
 };
 
 struct ec_device *ec;
@@ -186,7 +192,8 @@ static bool ec_reg_readable(struct device *dev, unsigned int reg)
 static bool ec_reg_writeable(struct device *dev, unsigned int reg)
 {
     /* 检查寄存器是否可写 */
-    if (reg == EC_SOC_ACPI_STATUS)
+    if (reg == EC_SOC_ACPI_STATUS
+	||	reg == EC_TEMP)
         return true;  /* 例如，命令寄存器和控制寄存器可写 */
     return false;
 }
@@ -382,7 +389,9 @@ static void battery_work_handler(struct work_struct *work)
     struct delayed_work *dwork = to_delayed_work(work);
     struct ec_device *ec = container_of(dwork, struct ec_device, battery_work);
     int ret;
-    
+	int32_t temp = 0;
+	uint8_t t = 0;
+	
     if (!ec->battery_enabled)
         return;
         
@@ -397,6 +406,9 @@ static void battery_work_handler(struct work_struct *work)
         power_supply_changed(ec->battery_psy);
     }
     /* 安排下一次刷新 */
+	thermal_zone_get_temp(ec->tz, &temp);
+	t = (uint8_t)(temp/1000);
+	ec_write_reg(ec,EC_TEMP,t);
     schedule_delayed_work(&ec->battery_work, msecs_to_jiffies(1000));
 }
 
@@ -821,6 +833,7 @@ static struct syscore_ops TH1520_syscore_ops = {
     .shutdown = TH1520_syscore_shutdown,
 };
 
+
 /* EC设备探测函数 */
 static int ec_probe(struct i2c_client *client, const struct i2c_device_id *dev_id)
 {
@@ -885,6 +898,16 @@ static int ec_probe(struct i2c_client *client, const struct i2c_device_id *dev_i
     dev_info(&client->dev, "EC device registered at 0x%02X\n", 
              client->addr);
 
+	// 获取thermal_zone0设备
+    ec->tz = thermal_zone_get_zone_by_name("cpu-thermal-zone");
+    if (IS_ERR(ec->tz)) {
+        ret = PTR_ERR(ec->tz);
+        dev_info(&client->dev,"Failed to get cpu-thermal-zone: %d\n", ret);
+    } else {
+		dev_info(&client->dev,"get cpu-thermal-zone success\n");
+	}
+
+	
     /* 初始化唤醒事件监听 */
     ret = init_wakeup_event_listener(ec);
     if (ret) {
@@ -940,7 +963,7 @@ static int ec_remove(struct i2c_client *client)
     
     /* 取消电池数据刷新工作 */
     cancel_delayed_work_sync(&ec->battery_work);
-    
+    #if 0
     /* 释放唤醒事件处理器 */
     input_unregister_handler(&ec->wakeup_handler);  /* 直接注销，无需判断 */
     
@@ -953,13 +976,15 @@ static int ec_remove(struct i2c_client *client)
     /* 注销电池电源供应器 */
     if (ec->battery_psy)
         power_supply_unregister(ec->battery_psy);
+
+	
+    #endif
     
     /* 销毁工作队列 */
     if (ec->wakeup_wq) {
         flush_workqueue(ec->wakeup_wq);
         destroy_workqueue(ec->wakeup_wq);
     }
-    
     dev_info(&client->dev, "EC device removed\n");
     return 0;
 }
