@@ -786,6 +786,7 @@ static int ec_resume(struct device *dev)
     
     ec_read_reg(ec, EC_SOC_ACPI_STATUS, &val);
     dev_info(dev, "%s:write ec EC_SOC_ACPI_STATUS: %d\n", __func__, val);
+	handle_lid_event(ec);
     
     /* 恢复电池数据刷新 */
     if (ec->battery_enabled)
