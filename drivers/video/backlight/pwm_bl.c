@@ -98,7 +98,7 @@ static int compute_duty_cycle(struct pwm_bl_data *pb, int brightness)
 		duty_cycle = pb->levels[brightness];
 	else
 		duty_cycle = brightness;
-
+	
 	duty_cycle *= state.period - lth;
 	do_div(duty_cycle, pb->scale);
 
@@ -114,9 +114,9 @@ static int pwm_backlight_update_status(struct backlight_device *bl)
 	if (pb->notify)
 		brightness = pb->notify(pb->dev, brightness);
 
-	if (brightness > 0) {
+	if (brightness >= 0) {
 		pwm_get_state(pb->pwm, &state);
-		state.duty_cycle = compute_duty_cycle(pb, brightness);
+		state.duty_cycle = compute_duty_cycle(pb, brightness);	
 		pwm_apply_state(pb->pwm, &state);
 		pwm_backlight_power_on(pb);
 	} else {
