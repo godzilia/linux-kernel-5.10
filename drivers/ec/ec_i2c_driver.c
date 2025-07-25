@@ -140,13 +140,15 @@ struct ec_device {
     struct workqueue_struct *wakeup_wq;
     struct wakeup_work_data wakeup_work;
 	struct thermal_zone_device *tz;
+	u8 onkey;
 };
 
 struct ec_device *ec;
 
 /* 函数前向声明 */
 static void handle_lid_event(struct ec_device *ec);
-static void handle_onkey_event(struct ec_device *ec);
+static void handle_onkey_event(struct ec_device *ec,u8 onkey);
+
 
 static void wakeup_event(struct input_handle *handle, unsigned int type,
                        unsigned int code, int value);
@@ -409,6 +411,10 @@ static void battery_work_handler(struct work_struct *work)
 	thermal_zone_get_temp(ec->tz, &temp);
 	t = (uint8_t)(temp/1000);
 	ec_write_reg(ec,EC_TEMP,t);
+	if(ec->onkey == 1) {
+		handle_onkey_event(ec,0);
+		ec->onkey = 0;
+	}
     schedule_delayed_work(&ec->battery_work, msecs_to_jiffies(1000));
 }
 
@@ -450,8 +456,9 @@ static void wakeup_work_handler(struct work_struct *work)
             break;
 			
 		case QEVENT_ONKEY:
-            dev_info(&ec->client->dev, "QEVENT_ONKEY event\n");
-			handle_onkey_event(ec);
+            dev_info(&ec->client->dev, "QEVENT_ONKEY event\n");	
+			handle_onkey_event(ec,1);
+			ec->onkey = 1;
             break;
 			
         default:
@@ -509,22 +516,13 @@ static void handle_lid_event(struct ec_device *ec)
     }
 }
 /* 处理盖子事件 */
-static void handle_onkey_event(struct ec_device *ec)
-{
-    u8 onkey_status;
-    int ret;
-    
-    // 读取盖子状态寄存器
-    ret = ec_read_reg(ec, EC_ONKEY_STATUS, &onkey_status);
-    if (ret) {
-        dev_err(&ec->client->dev, "Failed to read EC_ONKEY_STATUS: %d\n", ret);
-        return;
-    }
+static void handle_onkey_event(struct ec_device *ec,u8 onkey)
+{   
     if (ec->input_dev) {
-        input_event(ec->input_dev, EV_KEY, KEY_POWER,onkey_status);
+        input_event(ec->input_dev, EV_KEY, KEY_POWER,onkey);
         input_sync(ec->input_dev);
-        dev_info(&ec->client->dev, "EV_KEY event reported: %s\n", 
-                onkey_status == 1 ? "down" : "up");
+        dev_info(&ec->client->dev, "EV_ON_KEY event reported: %s\n", 
+                onkey == 1 ? "down" : "up");
     }
 }
 
