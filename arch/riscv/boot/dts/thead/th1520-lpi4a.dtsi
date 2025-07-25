@@ -40,8 +40,8 @@
 	lcd0_backlight: pwm-backlight@0 {
 		compatible = "pwm-backlight";
 		pwms = <&pwm 0 5000000>;
-		brightness-levels = <4 8 16 32 48 64 128 255>;
-		default-brightness-level = <7>;
+		brightness-levels = <7 14 28 56 84 112 140 168 196 224 252>;
+		default-brightness-level = <9>;
 	};
 
 	light_iopmp: iopmp {
@@ -297,7 +297,7 @@
 		interrupt-parent = <&gpio1_porta>;
 		interrupts = <26 2>;
 		status = "okay";
-		soc_version="CLOUD_BOOK_SOC_VERSION 1.10";
+		soc_version="CLOUD_BOOK_SOC_VERSION 1.11";
     };
        
 	vi_camera_en: vi_camera_en {
