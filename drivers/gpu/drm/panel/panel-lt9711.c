@@ -224,19 +224,19 @@ static const struct drm_panel_funcs panel_funcs = {
 };
 
 static const struct drm_display_mode lt9711_default_mode = {
-	.clock		= 169020,
+	.clock		= 160272,
 	.hdisplay	= 1920,
-	.hsync_start	= 1920 + 140,
-	.hsync_end	= 1920 + 140 + 160,
-	.htotal		= 1920 + 140 + 160 + 30,
+	.hsync_start	= 1920 + 48,
+	.hsync_end	= 1920 + 48 + 32,
+	.htotal		= 1920 + 48 + 32 + 120,
 
 	.vdisplay	= 1200,
-	.vsync_start	= 1200 + 18,
-	.vsync_end	= 1200 + 18 + 28,
-	.vtotal		= 1200 + 18 + 28 + 6,
+	.vsync_start	= 1200 + 3,
+	.vsync_end	= 1200 + 3 + 6,
+	.vtotal		= 1200 + 3 + 6 + 51,
 
-	.width_mm	= 62,
-	.height_mm	= 110,
+	.width_mm	= 301,
+	.height_mm	= 188,
 	.flags      = DRM_MODE_FLAG_NHSYNC | DRM_MODE_FLAG_NVSYNC,
 };
 
