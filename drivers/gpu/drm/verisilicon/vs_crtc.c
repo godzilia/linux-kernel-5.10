@@ -390,6 +390,7 @@ struct vs_crtc *vs_crtc_create(struct drm_device *drm_dev,
                        crtc->sync_mode,
                        VS_SINGLE_DC);
     }
+#if CONFIG_ENABLE_GAMMA_LUT
 
     if (info->gamma_size) {
         ret = drm_mode_crtc_set_gamma_size(&crtc->base,
@@ -400,6 +401,8 @@ struct vs_crtc *vs_crtc_create(struct drm_device *drm_dev,
         drm_crtc_enable_color_mgmt(&crtc->base, 0, false,
                        info->gamma_size);
     }
+#endif
+
 
     if (info->background) {
         crtc->bg_color = drm_property_create_range(drm_dev, 0,

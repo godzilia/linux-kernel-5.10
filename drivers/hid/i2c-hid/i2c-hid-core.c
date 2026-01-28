@@ -66,7 +66,7 @@
 #define I2C_HID_PWR_SLEEP	0x01
 
 /* debug option */
-static bool debug;
+static bool debug = false;
 module_param(debug, bool, 0444);
 MODULE_PARM_DESC(debug, "print a lot of debug information");
 
@@ -247,7 +247,7 @@ static int __i2c_hid_command(struct i2c_client *client,
 	memcpy(cmd->data + length, args, args_len);
 	length += args_len;
 
-	i2c_hid_dbg(ihid, "%s: cmd=%*ph\n", __func__, length, cmd->data);
+	i2c_hid_dbg(ihid, "%s: cmd=%*ph    ,wait=%d\n", __func__, length, cmd->data,wait);
 
 	msg[0].addr = client->addr;
 	msg[0].flags = client->flags & I2C_M_TEN;
@@ -1148,6 +1148,22 @@ static int i2c_hid_probe(struct i2c_client *client,
 	if (gpio_num < 0) {
 		dev_info(&client->dev,"Failed to get RST GPIO: %d\n", gpio_num);
 		ret = i2c_hid_fetch_hid_descriptor(ihid);
+		if (ret < 0) {
+			k = 10;
+		} else {
+			k = 0;
+		}
+		while(k--) {
+			msleep(1000);
+			ret = i2c_hid_fetch_hid_descriptor(ihid);
+			if (ret < 0) {
+				dev_info(&client->dev,"i2c_hid_fetch_hid_descriptor error k= %d\n", k);
+			} else {
+				dev_info(&client->dev,"i2c_hid_fetch_hid_descriptor success k= %d\n", k);
+				break;
+			}
+			msleep(1000);
+		}
 	} else {
 		dev_info(&client->dev,"i2c_hid get RST gpio_num: %d\n", gpio_num);
 	
